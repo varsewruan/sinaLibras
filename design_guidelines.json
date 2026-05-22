@@ -1,0 +1,127 @@
+{
+  "project_name": "SINALibras",
+  "app_type": "hybrid_fullstack",
+  "theme_and_archetype": {
+    "theme": "dark",
+    "archetype": "Gamified Dark Neon",
+    "description": "Inspired by Duolingo and Khan Academy Kids, focusing on a dark mode MVP with neon blue accents. Transmits technology, accessibility, and trust through deep navy backgrounds, vibrant royal blue, and soft neon cyan highlights."
+  },
+  "typography": {
+    "font_family": {
+      "headings": "Nunito, sans-serif",
+      "body": "Nunito, sans-serif",
+      "mono": "JetBrains Mono, monospace"
+    },
+    "rules": {
+      "h1": "text-4xl sm:text-5xl font-black tracking-tight",
+      "h2": "text-2xl sm:text-3xl font-bold tracking-tight",
+      "h3": "text-xl sm:text-2xl font-bold",
+      "body": "text-base font-medium leading-relaxed",
+      "buttons": "text-lg font-bold uppercase tracking-wider"
+    }
+  },
+  "colors": {
+    "background": {
+      "main": "#0B1120",
+      "secondary": "#111827",
+      "card": "#1E293B",
+      "overlay": "rgba(11, 17, 32, 0.8)"
+    },
+    "primary": {
+      "base": "#3B82F6",
+      "hover": "#2563EB",
+      "neon": "#00E5FF",
+      "glow": "rgba(0, 229, 255, 0.4)"
+    },
+    "secondary": {
+      "royal": "#1E3A8A",
+      "light": "#93C5FD"
+    },
+    "gamification": {
+      "success": "#22C55E",
+      "error": "#EF4444",
+      "coin_yellow": "#FBBF24",
+      "xp_purple": "#A855F7",
+      "streak_fire": "#F97316"
+    },
+    "text": {
+      "primary": "#F8FAFC",
+      "secondary": "#94A3B8",
+      "disabled": "#475569"
+    }
+  },
+  "layout_and_spacing": {
+    "strategy": "Mobile-first, generous spacing for touch targets, highly rounded corners.",
+    "navigation": {
+      "mobile": "Fixed bottom navigation bar, h-16, backdrop-blur-xl bg-[#1E293B]/90 border-t border-slate-700",
+      "desktop": "Fixed left sidebar, w-64, bg-[#1E293B] border-r border-slate-700"
+    },
+    "container": "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8",
+    "border_radius": {
+      "cards": "rounded-2xl",
+      "buttons": "rounded-xl",
+      "pills": "rounded-full"
+    }
+  },
+  "components": {
+    "buttons": {
+      "primary_3d": "bg-blue-500 text-white font-bold rounded-xl border-b-4 border-blue-700 hover:bg-blue-400 hover:border-blue-600 active:border-b-0 active:translate-y-1 transition-all",
+      "neon_glow": "bg-cyan-500 text-slate-900 font-bold rounded-xl shadow-[0_0_15px_rgba(0,229,255,0.5)] hover:shadow-[0_0_25px_rgba(0,229,255,0.7)] transition-all",
+      "secondary_3d": "bg-slate-700 text-white font-bold rounded-xl border-b-4 border-slate-900 hover:bg-slate-600 active:border-b-0 active:translate-y-1 transition-all"
+    },
+    "cards": {
+      "default": "bg-slate-800 rounded-2xl p-6 border border-slate-700 shadow-lg",
+      "interactive": "bg-slate-800 rounded-2xl p-6 border-2 border-transparent hover:border-blue-500 hover:-translate-y-1 transition-all cursor-pointer shadow-lg"
+    },
+    "progress_bar": "h-4 bg-slate-700 rounded-full overflow-hidden, inner fill: bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full transition-all duration-500",
+    "inputs": "bg-slate-900 border-2 border-slate-700 rounded-xl px-4 py-3 text-white focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all"
+  },
+  "animations": {
+    "feedback": "Use Framer Motion for bouncy, gamified feedback. e.g., correct answers scale up briefly (scale: 1.05) and glow green.",
+    "page_transition": "Fade in and slight slide up (y: 20 to 0) for new pages/lessons.",
+    "streak_flame": "Pulse and slight rotation animation for the streak flame icon."
+  },
+  "media": {
+    "images": [
+      {
+        "category": "hero_or_learning_path_background",
+        "url": "https://static.prod-images.emergentagent.com/jobs/51d46f97-9bfd-48f9-b01c-9431ba8a4716/images/e765c21deed8250fa25d82978c0e4fa47916a8dd38dd0f3da15b0a19651310f0.png",
+        "description": "3D level map background for the learning journey"
+      },
+      {
+        "category": "user_avatar_placeholder",
+        "url": "https://static.prod-images.emergentagent.com/jobs/51d46f97-9bfd-48f9-b01c-9431ba8a4716/images/492b9abf0734f95bdcae699f584c33822bc47bda01809a50fe6a0df6eb41debb.png",
+        "description": "3D cute robot avatar for user profile"
+      },
+      {
+        "category": "reward_crystal",
+        "url": "https://static.prod-images.emergentagent.com/jobs/51d46f97-9bfd-48f9-b01c-9431ba8a4716/images/b6bdb647b40449cf3a07b5d06e3ac847379f702b72b8d606c16060edd437021a.png",
+        "description": "3D floating blue crystal used as premium currency or high reward"
+      },
+      {
+        "category": "reward_coin",
+        "url": "https://static.prod-images.emergentagent.com/jobs/51d46f97-9bfd-48f9-b01c-9431ba8a4716/images/96f8c06da49c5b488b347dc9a89db75650ad5025f9dcab8a2133f7b1fbe8fdca.png",
+        "description": "3D gold coin for standard xp/currency rewards"
+      },
+      {
+        "category": "libras_lesson_illustration",
+        "url": "https://static.prod-images.emergentagent.com/jobs/51d46f97-9bfd-48f9-b01c-9431ba8a4716/images/c3793e42938b4bc1cf5e44c9ac714a77d01fe2a2535898b1f537b0d1176c8339.png",
+        "description": "3D styled hand doing a sign language gesture, useful for lesson cards or dictionary"
+      }
+    ],
+    "icons": {
+      "library": "lucide-react",
+      "styling": "strokeWidth={2.5} to match the chunky, friendly gamified aesthetic."
+    }
+  },
+  "instructions_to_main_agent": [
+    "Ensure all buttons use the 'primary_3d' or 'secondary_3d' style classes for the Duolingo-like press effect.",
+    "Implement a fixed side navigation for desktop (`lg:w-64` hidden on mobile) and a bottom navigation bar for mobile (`lg:hidden`).",
+    "The Home page should feature a gamified 'Path' (timeline) showing levels/phases. Use the 'hero_or_learning_path_background' as the section background if suitable.",
+    "Incorporate gamification elements in the header/top-bar: User Level, XP Bar, Coins, and Daily Streak.",
+    "All interactive elements MUST have a `data-testid` attribute (e.g., `data-testid='start-lesson-button'`).",
+    "Use framer-motion to add bouncy entrance animations to cards and modal popups.",
+    "Use Nunito font globally for a friendly, approachable vibe.",
+    "Do not implement a light/dark toggle. The app is strictly dark mode (Dark/Neon Blue) for this MVP."
+  ]
+}
