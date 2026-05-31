@@ -1,0 +1,65 @@
+# =============================================================================
+# SINALibras — production image (single host: API + SPA)
+# Build context is the REPO ROOT so we can copy both backend/ and frontend/.
+#   docker build -f Dockerfile.deploy -t sinalibras:prod .
+# =============================================================================
+
+# ---- Stage 1: frontend build ------------------------------------------------
+FROM node:20-alpine AS frontend
+WORKDIR /fe
+COPY frontend/package.json frontend/yarn.lock ./
+RUN yarn install --frozen-lockfile
+COPY frontend/ ./
+# Same-origin in prod: empty BACKEND_URL makes axios use the current host
+# (the FastAPI app serves both / and /api/*).
+ENV REACT_APP_BACKEND_URL=""
+ENV CI=true
+RUN yarn build
+
+
+# ---- Stage 2: python wheels -------------------------------------------------
+FROM python:3.11-slim AS wheels
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1
+WORKDIR /build
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends build-essential \
+ && rm -rf /var/lib/apt/lists/*
+COPY backend/requirements.txt ./
+RUN pip install --upgrade pip && pip wheel --wheel-dir /wheels -r requirements.txt
+
+
+# ---- Stage 3: runtime -------------------------------------------------------
+FROM python:3.11-slim AS runtime
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 \
+    PORT=8000 \
+    FRONTEND_BUILD_DIR=/app/static
+
+RUN groupadd --system app && useradd --system --gid app --home /app app
+WORKDIR /app
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends curl \
+ && rm -rf /var/lib/apt/lists/*
+
+COPY --from=wheels /wheels /wheels
+COPY backend/requirements.txt ./
+RUN pip install --no-index --find-links /wheels -r requirements.txt \
+ && rm -rf /wheels
+
+# Backend app.
+COPY --chown=app:app backend/ ./
+# Built SPA. Served as static + SPA fallback by app.main when FRONTEND_BUILD_DIR is set.
+COPY --from=frontend --chown=app:app /fe/build ./static
+# Re-add the sign-asset bundle. `COPY ... ./static` above wipes anything
+# that was sitting at /app/static/ (including the signs/ subdirectory
+# we just copied in from `backend/`), so we re-attach it here.
+COPY --chown=app:app backend/static/signs ./static/signs
+
+USER app
+EXPOSE 8000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD curl --fail --silent http://localhost:${PORT}/api/healthz || exit 1
+
+# Use a shell so ${PORT} expands at runtime (Fly injects PORT into the env).
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT}"]

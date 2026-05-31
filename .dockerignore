@@ -1,0 +1,32 @@
+# Generic
+.git
+.gitignore
+.github
+.vscode
+.idea
+.DS_Store
+*.log
+*.md
+!README.md
+
+# Memory + tests reports — never ship to the image
+memory
+test_reports
+test_result.md
+
+# Python
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/.venv
+backend/tests
+backend/htmlcov
+
+# Node (frontend build happens INSIDE the image)
+frontend/node_modules
+frontend/build
+frontend/.eslintcache
+
+# Compose / docker (we use Dockerfile.deploy for prod)
+docker-compose.yml
+backend/Dockerfile

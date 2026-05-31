@@ -1,0 +1,77 @@
+# =============================================================================
+# SINALibras — local development stack
+#
+# Usage:
+#   docker compose up                    # all services
+#   docker compose up backend mongo      # backend + db only (run frontend natively)
+#   docker compose logs -f backend
+#   docker compose down -v               # tear down + drop the mongo volume
+# =============================================================================
+
+services:
+  mongo:
+    image: mongo:7
+    container_name: sinalibras-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      # Use mongosh (mongo 7 ships it as the official shell).
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: sinalibras-backend
+    restart: unless-stopped
+    environment:
+      MONGO_URL: mongodb://mongo:27017
+      DB_NAME: sinalibras
+      CORS_ORIGINS: http://localhost:3000
+      ENVIRONMENT: development
+      LOG_LEVEL: DEBUG
+      # Dev-only secret. Override in real environments.
+      JWT_SECRET: dev-only-secret-please-rotate-in-production-at-least-32-chars
+      COOKIE_SECURE: "false"
+      COOKIE_SAMESITE: lax
+    ports:
+      - "8000:8000"
+    depends_on:
+      mongo:
+        condition: service_healthy
+    # Bind-mount source for hot reload during development.
+    # In production, remove the volume and the --reload flag.
+    volumes:
+      - ./backend:/app
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+  frontend:
+    image: node:20-alpine
+    container_name: sinalibras-frontend
+    working_dir: /app
+    # First boot installs deps (slow); subsequent boots are instant thanks to the named volume.
+    command: sh -c "yarn install --frozen-lockfile || yarn install && yarn start"
+    environment:
+      REACT_APP_BACKEND_URL: http://localhost:8000
+      # Webpack file-watching inside Docker requires polling on most hosts.
+      WATCHPACK_POLLING: "true"
+      CHOKIDAR_USEPOLLING: "true"
+      WDS_SOCKET_PORT: "3000"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - frontend-node-modules:/app/node_modules
+    depends_on:
+      - backend
+
+volumes:
+  mongo-data:
+  frontend-node-modules:
