@@ -1,53 +1,64 @@
-import { useEffect } from "react";
-import "@/App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import axios from "axios";
+import "@/index.css";
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { AnimatePresence, motion } from "framer-motion";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+import { AuthProvider } from "@/context/AuthContext";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { Toaster } from "@/components/ui/sonner";
+import { queryClient } from "@/lib/query";
+import Dictionary from "@/pages/Dictionary";
+import Home from "@/pages/Home";
+import Lesson from "@/pages/Lesson";
+import Lessons from "@/pages/Lessons";
+import Login from "@/pages/Login";
+import Profile from "@/pages/Profile";
+import Register from "@/pages/Register";
 
-const Home = () => {
-  const helloWorldApi = async () => {
-    try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
-    }
-  };
+const Protected = ({ children }) => <ProtectedRoute>{children}</ProtectedRoute>;
 
-  useEffect(() => {
-    helloWorldApi();
-  }, []);
-
+/**
+ * Wraps Routes so each pathname change is treated as an exit + enter pair.
+ * `mode="wait"` ensures the old page finishes leaving before the new one enters.
+ * `initial={false}` skips the entrance animation on the first paint (avoids a
+ * flash when the SPA boots).
+ */
+const AnimatedRoutes = () => {
+  const location = useLocation();
   return (
-    <div>
-      <header className="App-header">
-        <a
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
-    </div>
+    <AnimatePresence mode="wait" initial={false}>
+      <motion.div
+        key={location.pathname}
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -6 }}
+        transition={{ duration: 0.18, ease: "easeOut" }}
+      >
+        <Routes location={location}>
+          <Route path="/login"        element={<Login />} />
+          <Route path="/register"     element={<Register />} />
+          <Route path="/"             element={<Protected><Home /></Protected>} />
+          <Route path="/lessons"      element={<Protected><Lessons /></Protected>} />
+          <Route path="/lesson/:id"   element={<Protected><Lesson /></Protected>} />
+          <Route path="/dictionary"   element={<Protected><Dictionary /></Protected>} />
+          <Route path="/profile"      element={<Protected><Profile /></Protected>} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </motion.div>
+    </AnimatePresence>
   );
 };
 
 function App() {
   return (
-    <div className="App">
+    <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
-          </Route>
-        </Routes>
+        <AuthProvider>
+          <AnimatedRoutes />
+        </AuthProvider>
       </BrowserRouter>
-    </div>
+      <Toaster richColors position="top-right" />
+    </QueryClientProvider>
   );
 }
 

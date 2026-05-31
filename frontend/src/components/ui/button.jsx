@@ -11,6 +11,16 @@ const buttonVariants = cva(
       variant: {
         default:
           "bg-primary text-primary-foreground shadow hover:bg-primary/90",
+        // Duolingo-style press effect: a 4px "front-face" border that
+        // collapses when active, giving the button a physical depth feel.
+        default3d:
+          "bg-primary text-primary-foreground rounded-xl border-b-4 border-primary/40 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all",
+        // Same 3D feel, blue-glow variant for hero CTAs.
+        glow3d:
+          "bg-primary text-primary-foreground rounded-xl border-b-4 border-primary/40 shadow-glow hover:shadow-glow-lg hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all",
+        // Accent variant (light blue) — used sparingly for secondary CTAs.
+        accent3d:
+          "bg-accent text-accent-foreground rounded-xl border-b-4 border-accent/40 shadow-glow hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all",
         destructive:
           "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
         outline:
