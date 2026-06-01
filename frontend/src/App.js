@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 
 import { AuthProvider } from "@/context/AuthContext";
+import { BootSplash } from "@/components/BootSplash";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Toaster } from "@/components/ui/sonner";
 import { queryClient } from "@/lib/query";
@@ -57,6 +58,7 @@ function App() {
           <AnimatedRoutes />
         </AuthProvider>
       </BrowserRouter>
+      <BootSplash />
       <Toaster richColors position="top-right" />
     </QueryClientProvider>
   );
