@@ -139,10 +139,16 @@ def _mount_spa_if_configured(app: FastAPI, settings: Settings) -> None:
     if static_dir.is_dir():
         app.mount("/static", StaticFiles(directory=str(static_dir)), name="static-assets")
 
+    api_prefix = settings.API_PREFIX.strip("/")
+
     @app.get("/{full_path:path}", include_in_schema=False)
     async def spa_fallback(request: Request, full_path: str) -> FileResponse:
-        # /api/* never reaches here because those routes were matched earlier;
-        # this catch-all only runs for unmatched paths (SPA history routing).
+        # A request to a *registered* /api/* route is matched earlier and
+        # never reaches here. An *unregistered* /api/* path WOULD fall
+        # through to this catch-all, returning index.html with a 200 — which
+        # is what callers JSON.parse blowing up downstream. So guard it.
+        if api_prefix and (full_path == api_prefix or full_path.startswith(f"{api_prefix}/")):
+            raise HTTPException(status_code=404)
         # Reject obvious file requests (e.g. /robots.txt) with a real 404 so
         # crawlers don't get index.html with a 200.
         if "." in full_path.rsplit("/", 1)[-1]:
