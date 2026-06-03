@@ -20,7 +20,6 @@ from app.repositories.lesson_repo import LessonRepository
 from app.repositories.phase_repo import PhaseRepository
 from app.repositories.progress_repo import ProgressRepository
 from app.repositories.sign_repo import SignRepository
-from app.repositories.status_repo import StatusRepository
 from app.repositories.user_repo import UserRepository
 from app.services.auth_service import AuthService
 from app.services.learning_service import LearningService
@@ -47,10 +46,6 @@ def get_sign_repo(db: AsyncIOMotorDatabase = Depends(get_db)) -> SignRepository:
 
 def get_progress_repo(db: AsyncIOMotorDatabase = Depends(get_db)) -> ProgressRepository:
     return ProgressRepository(db)
-
-
-def get_status_repo(db: AsyncIOMotorDatabase = Depends(get_db)) -> StatusRepository:
-    return StatusRepository(db)
 
 
 # ---------------- Services --------------------------------------------------
