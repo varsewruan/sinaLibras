@@ -29,13 +29,13 @@ slowapi>=0.1.9
 # Observability
 structlog>=24.1.0
 
-# Misc utilities (kept from the template; review in Sprint 2)
+# Misc utilities
 python-dotenv>=1.0.1
 python-multipart>=0.0.9
 tzdata>=2024.2
 
 # =============================================================================
-# Dev / test (move to requirements-dev.txt when CI lands in Sprint 6)
+# Dev / test
 # =============================================================================
 pytest>=8.0.0
 pytest-asyncio>=0.23.0

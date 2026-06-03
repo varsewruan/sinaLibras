@@ -12,8 +12,7 @@ Routes are thin wrappers that translate HTTP to/from this layer.
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
-from typing import Optional
+from datetime import datetime, timezone
 
 from app.models.base import utc_now
 from app.models.progress import CompleteLessonRequest, CompleteLessonResponse, Progress

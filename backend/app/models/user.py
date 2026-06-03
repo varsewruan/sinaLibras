@@ -1,7 +1,7 @@
 """User domain model.
 
 The auth fields (hashed_password) live here, but the *logic* of hashing,
-verifying and issuing tokens belongs in app.core.security (Sprint 2).
+verifying and issuing tokens belongs in app.core.security.
 This model is just the storage shape.
 """
 
