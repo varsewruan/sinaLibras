@@ -54,14 +54,4 @@ async def search_signs(
     repo: SignRepository = Depends(get_sign_repo),
 ) -> list[SignView]:
     signs = await repo.search_by_term(q, limit=limit) if q else await repo.list(limit=limit)
-    return [
-        SignView(
-            id=s.id,
-            portuguese_term=s.portuguese_term,
-            libras_description=s.libras_description,
-            text_description=s.text_description,
-            thumbnail_url=str(s.thumbnail_url) if s.thumbnail_url else None,
-            video_url=str(s.video_url) if s.video_url else None,
-        )
-        for s in signs
-    ]
+    return [SignView.from_sign(s) for s in signs]

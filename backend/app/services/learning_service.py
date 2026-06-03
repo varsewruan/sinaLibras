@@ -100,15 +100,5 @@ class LearningService:
             description=lesson.description,
             order=lesson.order,
             xp_reward=lesson.xp_reward,
-            signs=[
-                SignView(
-                    id=sign.id,
-                    portuguese_term=sign.portuguese_term,
-                    libras_description=sign.libras_description,
-                    text_description=sign.text_description,
-                    thumbnail_url=str(sign.thumbnail_url) if sign.thumbnail_url else None,
-                    video_url=str(sign.video_url) if sign.video_url else None,
-                )
-                for sign in signs_full
-            ],
+            signs=[SignView.from_sign(sign) for sign in signs_full],
         )
