@@ -1,13 +1,7 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { BookOpen, Home, Search, User } from "lucide-react";
 import clsx from "clsx";
 
-const items = [
-  { to: "/",           label: "Início",     icon: Home,     match: (p) => p === "/" },
-  { to: "/lessons",    label: "Lições",     icon: BookOpen, match: (p) => p.startsWith("/lessons") || p.startsWith("/lesson/") },
-  { to: "/dictionary", label: "Dicionário", icon: Search,   match: (p) => p.startsWith("/dictionary") },
-  { to: "/profile",    label: "Perfil",     icon: User,     match: (p) => p.startsWith("/profile") },
-];
+import { navItems } from "../lib/nav-items";
 
 export const Sidebar = () => {
   const { pathname } = useLocation();
@@ -22,7 +16,7 @@ export const Sidebar = () => {
         </span>
       </div>
       <nav className="flex-1 p-4 space-y-1">
-        {items.map(({ to, label, icon: Icon, match }) => {
+        {navItems.map(({ to, label, icon: Icon, match }) => {
           const active = match(pathname);
           return (
             <NavLink
