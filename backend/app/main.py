@@ -25,7 +25,7 @@ from app.core.config import Settings, get_settings
 from app.core.logging import get_logger, setup_logging
 from app.core.rate_limit import limiter
 from app.db.mongo import close_mongo_connection, connect_to_mongo, ensure_indexes
-from app.routers import auth, health, learning, progress
+from app.routers import achievements, auth, health, learning, progress, ranking, users
 
 logger = get_logger(__name__)
 
@@ -85,8 +85,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     api.include_router(health.router)
     api.include_router(auth.router)
+    api.include_router(users.router)
     api.include_router(learning.router)
     api.include_router(progress.router)
+    api.include_router(ranking.router)
+    api.include_router(achievements.router)
 
     app.include_router(api)
 
