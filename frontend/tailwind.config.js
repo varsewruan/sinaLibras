@@ -45,18 +45,19 @@ module.exports = {
         ring: "hsl(var(--ring))",
 
         // SINALibras-specific gamification palette (literal values, not vars,
-        // because they don't switch with theme). Tuned for the Blue light
-        // theme — saturations dialed to read on cool white without glare
-        // and without losing legibility. Gamification icons keep their
-        // semantic colors (gold = coin, orange = fire, purple = XP).
+        // because they don't switch with theme). Tuned for the Blue DARK
+        // theme — bright, saturated hues that glow against deep navy.
+        // Currencies: star/gold = XP, cyan gem = gems, orange = streak fire.
         glow: {
-          DEFAULT: "#0446b0",
-          soft: "rgba(141, 206, 240, 0.45)",
+          DEFAULT: "#2f7ff0",
+          soft: "rgba(47, 127, 240, 0.45)",
         },
-        success: "#16A34A",   // forest green reads on white
-        coin: "#CA8A04",      // ochre gold (legible on white)
-        xp: "#7C3AED",        // royal purple deeper for white bg legibility
-        streak: "#EA580C",    // warm orange — fire icon, no more coral
+        success: "#34D399",   // emerald reads bright on navy
+        coin: "#FBBF24",      // gold coin
+        star: "#FBBF24",      // gold star (XP badge in the top bar)
+        gem: "#38BDF8",       // cyan gem (gems currency)
+        xp: "#A78BFA",        // lively violet for XP accents
+        streak: "#FB923C",    // warm orange — fire icon
       },
       fontFamily: {
         sans: ["Nunito", "system-ui", "sans-serif"],
@@ -69,13 +70,12 @@ module.exports = {
         sm: "calc(var(--radius) - 4px)",
       },
       boxShadow: {
-        // On a light canvas, "neon glow" reads as glare. Use soft cool-blue
-        // drop-shadows tinted toward the brand primary so cards lift off
-        // the page without producing a harsh halo.
-        glow: "0 6px 24px -8px rgba(4, 70, 176, 0.40), 0 2px 6px -2px rgba(3, 31, 85, 0.10)",
-        "glow-lg": "0 10px 32px -8px rgba(4, 70, 176, 0.50), 0 4px 10px -2px rgba(3, 31, 85, 0.12)",
+        // On the navy canvas a real neon-blue glow reads well — cards and
+        // CTAs float above the page with a bright halo plus depth shadow.
+        glow: "0 0 0 1px rgba(47,127,240,0.20), 0 8px 28px -6px rgba(47, 127, 240, 0.45), 0 4px 12px -4px rgba(0, 0, 0, 0.45)",
+        "glow-lg": "0 0 0 1px rgba(47,127,240,0.28), 0 14px 40px -6px rgba(47, 127, 240, 0.60), 0 6px 16px -4px rgba(0, 0, 0, 0.50)",
         // Warm-orange-tinted lift for streak/fire accents (kept semantic).
-        "glow-orange": "0 6px 24px -8px rgba(234, 88, 12, 0.45), 0 2px 6px -2px rgba(28, 20, 16, 0.08)",
+        "glow-orange": "0 8px 28px -6px rgba(251, 146, 60, 0.50), 0 4px 12px -4px rgba(0, 0, 0, 0.45)",
       },
       keyframes: {
         "accordion-down": {

@@ -1,17 +1,20 @@
 /**
- * Top bar with gamification stats. Shown on every authenticated page.
+ * Top bar — mirrors the mockup. Left: avatar + name + level (links to the
+ * profile). Right: XP (gold star), gems (cyan), notifications, settings.
  *
- * Number rolls (XP, streak) animate via framer-motion so the user feels
- * the reward when XP lands. The Flame icon pulses while there's an active
- * streak — a small thing that makes the page feel "alive".
+ * The star/level numbers roll in via framer-motion so an XP gain feels
+ * rewarding. The streak lives in the sidebar (desktop) — here we surface XP
+ * and the cosmetic gem currency, matching the reference layout.
  */
 
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Coins, Flame, LogOut, Zap } from "lucide-react";
-import clsx from "clsx";
+import { Bell, Gem, Hand, Plus, Settings, Star } from "lucide-react";
+import { toast } from "sonner";
 
 import { useAuth } from "@/context/AuthContext";
-import { Button } from "@/components/ui/button";
+import { UserAvatar } from "@/components/UserAvatar";
+import { gemsFromXp, levelFromXp } from "@/lib/level";
 
 const RollingNumber = ({ value }) => (
   <motion.span
@@ -19,50 +22,76 @@ const RollingNumber = ({ value }) => (
     initial={{ opacity: 0, y: -6 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.25 }}
-    className="text-sm font-bold tabular-nums"
+    className="tabular-nums"
   >
     {value}
   </motion.span>
 );
 
-const Stat = ({ icon: Icon, value, color, label, animateIcon = false, testId }) => (
+const StatPill = ({ icon: Icon, value, color, label, trailing, testId }) => (
   <div
     data-testid={testId}
-    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white text-foreground shadow-sm ring-1 ring-white/40"
+    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#0a1730] ring-1 ring-white/10"
     aria-label={`${label}: ${value}`}
   >
-    <Icon
-      className={clsx("w-4 h-4", animateIcon && "animate-flame-pulse")}
-      style={{ color }}
-      strokeWidth={2.5}
-      aria-hidden="true"
-    />
-    <RollingNumber value={value} />
+    <Icon className="w-4 h-4" style={{ color }} strokeWidth={2.5} aria-hidden="true" />
+    <span className="text-sm font-black text-white">
+      <RollingNumber value={value} />
+    </span>
+    {trailing}
   </div>
 );
 
-export const Header = ({ title }) => {
-  const { user, logout } = useAuth();
+const IconButton = ({ icon: Icon, label, onClick, to }) => {
+  const cls =
+    "inline-flex items-center justify-center w-9 h-9 rounded-xl bg-[#0a1730] ring-1 ring-white/10 text-white/70 hover:text-white hover:ring-white/25 transition-colors";
+  const inner = <Icon className="w-5 h-5" strokeWidth={2.5} aria-hidden="true" />;
+  return to ? (
+    <Link to={to} aria-label={label} className={cls}>{inner}</Link>
+  ) : (
+    <button type="button" aria-label={label} onClick={onClick} className={cls}>{inner}</button>
+  );
+};
+
+export const Header = () => {
+  const { user } = useAuth();
   const xp = user?.xp ?? 0;
-  const streak = user?.streak?.current ?? 0;
+  const level = levelFromXp(xp);
+  const gems = gemsFromXp(xp);
+
   return (
-    <header className="sticky top-0 z-30 bg-primary text-primary-foreground border-b border-primary/30 shadow-md">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <h1 className="hidden lg:block text-xl font-bold tracking-tight">{title}</h1>
+    <header className="sticky top-0 z-30 bg-[#0e1f3d]/95 backdrop-blur border-b border-white/10 shadow-md">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
+        {/* Mobile logo (sidebar is hidden < lg) */}
+        <Link to="/" className="lg:hidden flex items-center gap-1.5 mr-1" aria-label="Início">
+          <Hand className="w-6 h-6 text-primary -rotate-12" strokeWidth={2.5} />
+        </Link>
+
+        {/* Identity — links to profile */}
+        <Link
+          to="/profile"
+          className="flex items-center gap-3 min-w-0 rounded-full pr-3 hover:bg-white/5 transition-colors"
+          data-testid="header-profile"
+        >
+          <UserAvatar avatar={user?.avatar} size={40} ring />
+          <div className="hidden sm:block leading-tight min-w-0">
+            <p className="font-black text-white truncate max-w-[10rem]">{user?.name ?? "—"}</p>
+            <p className="text-xs font-bold text-white/50">Nível {String(level).padStart(2, "0")}</p>
+          </div>
+        </Link>
+
         <div className="flex items-center gap-2 ml-auto">
-          <Stat icon={Zap}   value={xp}     color="#7C3AED" label="XP"        testId="stat-xp" />
-          <Stat icon={Flame} value={streak} color="#EA580C" label="Sequência" testId="stat-streak" animateIcon={streak > 0} />
-          <Stat icon={Coins} value={0}      color="#CA8A04" label="Moedas"    testId="stat-coins" />
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={logout}
-            aria-label="Sair"
-            data-testid="logout"
-            className="ml-1 text-primary-foreground hover:bg-white/15 hover:text-primary-foreground"
-          >
-            <LogOut className="w-5 h-5" strokeWidth={2.5} />
-          </Button>
+          <StatPill icon={Star}     value={xp}   color="#FBBF24" label="XP"    testId="stat-xp" />
+          <StatPill
+            icon={Gem} value={gems} color="#38BDF8" label="Gemas" testId="stat-gems"
+            trailing={<Plus className="w-3 h-3 text-gem" strokeWidth={3} aria-hidden="true" />}
+          />
+          <IconButton
+            icon={Bell}
+            label="Notificações"
+            onClick={() => toast("Sem novas notificações", { description: "Você está em dia! 🎉" })}
+          />
+          <IconButton icon={Settings} label="Configurações" to="/profile" />
         </div>
       </div>
     </header>

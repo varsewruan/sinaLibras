@@ -24,6 +24,9 @@ export const useCompleteLesson = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["phases"] });
       qc.invalidateQueries({ queryKey: ["summary"] });
+      // XP/streak/lesson-count all moved, so the derived views are stale.
+      qc.invalidateQueries({ queryKey: ["achievements"] });
+      qc.invalidateQueries({ queryKey: ["ranking"] });
       refresh();
     },
   });

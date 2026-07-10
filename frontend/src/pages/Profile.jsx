@@ -1,12 +1,18 @@
 import { motion } from "framer-motion";
-import { BookCheck, Flame, LogOut, Trophy, Zap } from "lucide-react";
+import { BookCheck, Flame, LogOut, Star, Trophy } from "lucide-react";
+import clsx from "clsx";
+import { toast } from "sonner";
 
 import { AppShell } from "@/components/AppShell";
+import { UserAvatar } from "@/components/UserAvatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/context/AuthContext";
 import { useSummary } from "@/lib/hooks/useLearning";
+import { useUpdateAvatar } from "@/lib/hooks/useProfile";
+import { AVATARS, DEFAULT_AVATAR } from "@/lib/avatars";
+import { levelFromXp, levelProgress } from "@/lib/level";
 
 const StatCard = ({ icon: Icon, color, label, value }) => (
   <Card>
@@ -37,11 +43,65 @@ const StatCardSkeleton = () => (
   </Card>
 );
 
+const AvatarPicker = ({ current }) => {
+  const { mutate, isPending, variables } = useUpdateAvatar();
+
+  const choose = (id) => {
+    if (id === current || isPending) return;
+    mutate(id, {
+      onSuccess: () => toast.success("Avatar atualizado!"),
+      onError: () => toast.error("Não foi possível trocar o avatar."),
+    });
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg">Escolha seu avatar</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
+          {AVATARS.map((a) => {
+            const selected = a.id === current;
+            const pending = isPending && variables === a.id;
+            return (
+              <button
+                key={a.id}
+                type="button"
+                onClick={() => choose(a.id)}
+                disabled={isPending}
+                aria-pressed={selected}
+                aria-label={a.label}
+                data-testid={`avatar-${a.id}`}
+                className={clsx(
+                  "flex flex-col items-center gap-1.5 rounded-2xl p-2 transition-all",
+                  "hover:bg-white/5 disabled:cursor-not-allowed",
+                  selected && "bg-primary/15 ring-2 ring-primary",
+                  pending && "animate-pulse"
+                )}
+              >
+                <UserAvatar avatar={a.id} size={48} />
+                <span className="text-[10px] font-bold text-muted-foreground truncate max-w-full">
+                  {a.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
 export default function Profile() {
   const { user, logout } = useAuth();
   const { data: summary, isLoading } = useSummary();
 
   if (!user) return null;
+
+  const xp = user.xp ?? 0;
+  const level = levelFromXp(xp);
+  const { into, needed, toNext } = levelProgress(xp);
 
   return (
     <AppShell title="Perfil">
@@ -50,16 +110,38 @@ export default function Profile() {
         className="space-y-6"
       >
         <Card>
-          <CardHeader className="flex flex-row items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-accent/30 text-primary flex items-center justify-center text-2xl font-black uppercase">
-              {user.name?.[0] ?? "?"}
-            </div>
-            <div>
-              <CardTitle className="text-2xl">{user.name}</CardTitle>
-              <p className="text-sm text-muted-foreground">{user.email}</p>
+          <CardHeader className="flex flex-row items-center gap-5">
+            <UserAvatar avatar={user.avatar ?? DEFAULT_AVATAR} size={80} ring />
+            <div className="min-w-0 flex-1">
+              <CardTitle className="text-2xl truncate">{user.name}</CardTitle>
+              <p className="text-sm text-muted-foreground truncate">{user.email}</p>
+
+              <div className="mt-3 space-y-1.5">
+                <div className="flex items-center justify-between text-xs font-bold">
+                  <span className="text-primary">Nível {String(level).padStart(2, "0")}</span>
+                  <span className="text-muted-foreground">
+                    faltam {toNext} XP
+                  </span>
+                </div>
+                <div
+                  className="h-2.5 w-full rounded-full bg-white/10 overflow-hidden"
+                  role="progressbar"
+                  aria-valuenow={into}
+                  aria-valuemin={0}
+                  aria-valuemax={needed}
+                  aria-label={`Progresso para o nível ${level + 1}`}
+                >
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-primary to-accent"
+                    style={{ width: `${(into / needed) * 100}%` }}
+                  />
+                </div>
+              </div>
             </div>
           </CardHeader>
         </Card>
+
+        <AvatarPicker current={user.avatar ?? DEFAULT_AVATAR} />
 
         <div className="grid sm:grid-cols-2 gap-4">
           {isLoading ? (
@@ -68,10 +150,10 @@ export default function Profile() {
             </>
           ) : (
             <>
-              <StatCard icon={Zap}        color="#7C3AED" label="XP total"            value={user.xp ?? 0} />
-              <StatCard icon={Flame}      color="#EA580C" label="Sequência atual"     value={user.streak?.current ?? 0} />
-              <StatCard icon={Trophy}     color="#CA8A04" label="Maior sequência"     value={user.streak?.longest ?? 0} />
-              <StatCard icon={BookCheck}  color="#16A34A" label="Lições concluídas"   value={summary?.lessons_completed ?? 0} />
+              <StatCard icon={Star}       color="#FBBF24" label="XP total"          value={xp} />
+              <StatCard icon={Flame}      color="#FB923C" label="Sequência atual"   value={user.streak?.current ?? 0} />
+              <StatCard icon={Trophy}     color="#38BDF8" label="Maior sequência"   value={user.streak?.longest ?? 0} />
+              <StatCard icon={BookCheck}  color="#34D399" label="Lições concluídas" value={summary?.lessons_completed ?? 0} />
             </>
           )}
         </div>

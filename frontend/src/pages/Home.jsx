@@ -1,132 +1,67 @@
 /**
- * Home — contextual landing.
+ * Home — the game hub from the mockup.
  *
- * Pulls phases and picks the first not-yet-completed lesson as a "Continue
- * de onde parou" CTA. Falls back to "Começar do início" when the catalog
- * hasn't been touched, or "Tudo concluído" when every lesson is done.
+ * One glowing panel: a big JOGAR button that resumes the first unfinished
+ * lesson, plus the three entry points (Fases / Objetivos / Ranking).
  */
 
-import { Link } from "react-router-dom";
+import { MapPin, Target, Trophy } from "lucide-react";
 import { motion } from "framer-motion";
-import { ArrowRight, BookCheck, BookOpen, Search } from "lucide-react";
 
 import { AppShell } from "@/components/AppShell";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BigCTA } from "@/components/BigCTA";
+import { DecorHands } from "@/components/DecorHands";
+import { FeatureCard } from "@/components/FeatureCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAuth } from "@/context/AuthContext";
 import { usePhases } from "@/lib/hooks/useLearning";
+import { findNextLesson } from "@/lib/next-lesson";
 
-const Welcome = ({ name }) => (
-  <Card className="overflow-hidden border-border/70">
-    <motion.div
-      initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}
-      className="bg-gradient-to-br from-primary/20 via-accent/10 to-transparent p-8 space-y-4"
-    >
-      <p className="text-xs font-bold uppercase tracking-wider text-primary">
-        Bem-vindo de volta
-      </p>
-      <h2 className="text-3xl sm:text-4xl font-black tracking-tight leading-tight">
-        Olá, <span className="text-primary">{name}</span> 👋
-      </h2>
-      <p className="text-muted-foreground max-w-xl">
-        Pronto(a) para a próxima lição? Vamos manter sua sequência viva.
-      </p>
-    </motion.div>
-  </Card>
-);
-
-const ContinueCardSkeleton = () => (
-  <Card><CardContent className="p-8 space-y-3">
-    <Skeleton className="h-4 w-32" />
-    <Skeleton className="h-7 w-64" />
-    <Skeleton className="h-10 w-40 mt-4" />
-  </CardContent></Card>
-);
-
-const findNext = (phases) => {
-  for (const phase of phases) {
-    for (const lesson of phase.lessons) {
-      if (!lesson.completed) return { phase, lesson };
-    }
-  }
-  return null;
-};
-
-const ContinueCard = ({ next }) => {
-  if (!next) {
-    return (
-      <Card className="ring-2 ring-primary shadow-glow overflow-hidden">
-        <CardContent className="p-8 text-center space-y-3">
-          <BookCheck className="w-12 h-12 mx-auto text-primary" strokeWidth={2.5} />
-          <h3 className="text-2xl font-black">Você concluiu tudo!</h3>
-          <p className="text-muted-foreground">Mais conteúdo vem em breve. Enquanto isso, revise no dicionário.</p>
-        </CardContent>
-      </Card>
-    );
-  }
-  return (
-    <Card className="overflow-hidden border-border/70">
-      <div className="bg-gradient-to-br from-primary/20 via-accent/10 to-transparent p-8 space-y-4">
-        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary">
-          <BookOpen className="w-4 h-4" strokeWidth={2.5} />
-          Fase {next.phase.order} — {next.phase.title}
-        </div>
-        <h3 className="text-2xl sm:text-3xl font-black">Continue: {next.lesson.title}</h3>
-        <Button asChild variant="glow3d" size="lg" className="font-bold uppercase tracking-wider px-8" data-testid="continue-cta">
-          <Link to={`/lesson/${next.lesson.id}`}>
-            Continuar <ArrowRight className="w-4 h-4 ml-1" />
-          </Link>
-        </Button>
-      </div>
-    </Card>
-  );
-};
-
-const PreviewCard = ({ icon: Icon, color, title, description, to }) => (
-  <Card className="border-2 border-border/60 hover:border-primary/60 transition-all hover:-translate-y-1 cursor-pointer">
-    <Link to={to} className="block">
-      <CardHeader>
-        <div
-          className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3"
-          style={{ background: `${color}22`, color }}
-        >
-          <Icon className="w-6 h-6" strokeWidth={2.5} />
-        </div>
-        <CardTitle className="text-lg">{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <p className="text-sm text-muted-foreground">{description}</p>
-      </CardContent>
-    </Link>
-  </Card>
-);
+const HUB = [
+  {
+    icon: MapPin, iconColor: "#FBBF24", to: "/lessons", testId: "hub-fases",
+    title: "Fases", description: "Escolha sua próxima missão e avance!",
+  },
+  {
+    icon: Target, iconColor: "#38BDF8", to: "/achievements", testId: "hub-objetivos",
+    title: "Objetivos", description: "Complete conquistas e ganhe recompensas!",
+  },
+  {
+    icon: Trophy, iconColor: "#FBBF24", to: "/ranking", testId: "hub-ranking",
+    title: "Ranking", description: "Veja sua posição no ranking e compita!",
+  },
+];
 
 export default function Home() {
-  const { user } = useAuth();
   const { data: phases, isLoading } = usePhases();
-  const next = phases ? findNext(phases) : null;
+  const next = phases ? findNextLesson(phases) : null;
+
+  // Everything done (or catalog empty) → send the CTA to the path overview.
+  const ctaTo = next ? `/lesson/${next.lesson.id}` : "/lessons";
 
   return (
     <AppShell title="Início">
-      <div className="space-y-8">
-        <Welcome name={user?.name?.split(" ")[0]} />
-        {isLoading ? <ContinueCardSkeleton /> : <ContinueCard next={next} />}
-        <div className="grid sm:grid-cols-2 gap-4">
-          <PreviewCard
-            icon={BookOpen} color="#0446b0"
-            title="Caminho completo"
-            description="Veja todas as fases e lições disponíveis no seu currículo."
-            to="/lessons"
-          />
-          <PreviewCard
-            icon={Search} color="#0446b0"
-            title="Dicionário de sinais"
-            description="Busque por termo em português e veja a representação do sinal."
-            to="/dictionary"
-          />
+      <motion.section
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="relative overflow-hidden rounded-3xl bg-card-glow ring-1 ring-white/10 px-6 py-10 sm:px-10 sm:py-14"
+      >
+        <DecorHands />
+
+        <div className="relative flex flex-col items-center gap-10">
+          {isLoading ? (
+            <Skeleton className="h-[76px] w-[280px] rounded-full" />
+          ) : (
+            <BigCTA to={ctaTo} label="JOGAR" testId="cta-jogar" />
+          )}
+
+          <div className="grid w-full max-w-3xl grid-cols-1 gap-4 sm:grid-cols-3">
+            {HUB.map((card) => (
+              <FeatureCard key={card.title} {...card} />
+            ))}
+          </div>
         </div>
-      </div>
+      </motion.section>
     </AppShell>
   );
 }
