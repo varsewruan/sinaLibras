@@ -14,7 +14,7 @@ from __future__ import annotations
 from typing import Optional
 
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
-from pymongo import ASCENDING
+from pymongo import ASCENDING, DESCENDING
 
 from app.core.config import Settings
 from app.core.logging import get_logger
@@ -74,6 +74,13 @@ async def ensure_indexes(db: AsyncIOMotorDatabase) -> None:
 
     # users: email is the natural unique key for login
     await db.users.create_index("email", unique=True, name="uniq_users_email")
+
+    # users: leaderboard reads the top-N by XP. created_at breaks ties so the
+    # order is stable across requests (earlier account wins an XP tie).
+    await db.users.create_index(
+        [("xp", DESCENDING), ("created_at", ASCENDING)],
+        name="idx_users_xp_desc",
+    )
 
     # progress: a user can only complete a given lesson once (most recent attempt wins)
     await db.progress.create_index(

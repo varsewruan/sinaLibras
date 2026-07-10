@@ -18,6 +18,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import secrets
 import urllib.parse
 from pathlib import Path
 
@@ -25,10 +26,13 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from app.core.config import get_settings
 from app.core.logging import get_logger, setup_logging
+from app.core.security import hash_password
 from app.db.mongo import connect_to_mongo, ensure_indexes
+from app.models.base import utc_now
 from app.models.lesson import Lesson
 from app.models.phase import Phase
 from app.models.sign import Sign
+from app.models.user import StreakState, User
 
 logger = get_logger(__name__)
 
@@ -89,6 +93,23 @@ CATALOG = [
              "signs": ["Rosa", "Roxo", "Laranja", "Dourado"]},
         ],
     },
+]
+
+
+# Demo leaderboard population. Opt-in via --demo-users: never seed these into
+# a real deployment. Each gets a random unusable password, so the accounts
+# exist for the ranking but nobody can log in as them.
+DEMO_USERS = [
+    {"name": "Ana Beatriz",  "avatar": "unicorn", "xp": 1840, "streak": 23},
+    {"name": "Carlos Mendes", "avatar": "fox",    "xp": 1520, "streak": 14},
+    {"name": "Duda Rocha",   "avatar": "owl",     "xp": 1275, "streak": 31},
+    {"name": "Rafael Lima",  "avatar": "robot",   "xp": 1040, "streak": 7},
+    {"name": "Juliana Alves", "avatar": "cat",    "xp": 890,  "streak": 11},
+    {"name": "Pedro Nunes",  "avatar": "hero",    "xp": 720,  "streak": 5},
+    {"name": "Marina Costa", "avatar": "frog",    "xp": 610,  "streak": 9},
+    {"name": "Tiago Ferraz", "avatar": "ninja",   "xp": 430,  "streak": 3},
+    {"name": "Letícia Souza", "avatar": "panda",  "xp": 260,  "streak": 2},
+    {"name": "Bruno Tavares", "avatar": "alien",  "xp": 120,  "streak": 1},
 ]
 
 
@@ -153,6 +174,32 @@ async def _seed_lesson(
     return lesson.id
 
 
+async def _seed_demo_users(db: AsyncIOMotorDatabase) -> None:
+    """Populate the leaderboard with sample players. Idempotent by email."""
+    for spec in DEMO_USERS:
+        slug = spec["name"].split()[0].lower()
+        email = f"{slug}@demo.sinalibras.dev"
+        if await db.users.find_one({"email": email}):
+            continue
+
+        now = utc_now()
+        user = User(
+            email=email,
+            name=spec["name"],
+            # Random secret => the account can never be logged into.
+            hashed_password=hash_password(secrets.token_urlsafe(32)),
+            avatar=spec["avatar"],
+            xp=spec["xp"],
+            streak=StreakState(
+                current=spec["streak"],
+                longest=spec["streak"],
+                last_activity_at=now,
+            ),
+        )
+        await db.users.insert_one(user.to_mongo())
+        logger.info("seed_demo_user_inserted", name=spec["name"], xp=spec["xp"])
+
+
 async def _seed_phase(db: AsyncIOMotorDatabase, *, order: int, title: str, description: str) -> str:
     existing = await db.phases.find_one({"order": order})
     if existing:
@@ -163,7 +210,7 @@ async def _seed_phase(db: AsyncIOMotorDatabase, *, order: int, title: str, descr
     return phase.id
 
 
-async def run(*, reset: bool) -> None:
+async def run(*, reset: bool, demo_users: bool = False) -> None:
     settings = get_settings()
     setup_logging(settings)
     db = await connect_to_mongo(settings)
@@ -201,18 +248,25 @@ async def run(*, reset: bool) -> None:
                 sign_ids=sign_ids,
             )
 
+    if demo_users:
+        await _seed_demo_users(db)
+
     logger.info("seed_complete",
                 phases=await db.phases.count_documents({}),
                 lessons=await db.lessons.count_documents({}),
-                signs=await db.signs.count_documents({}))
+                signs=await db.signs.count_documents({}),
+                users=await db.users.count_documents({}))
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Seed SINALibras content catalog")
     parser.add_argument("--reset", action="store_true",
                         help="Drop phases/lessons/signs collections before seeding")
+    parser.add_argument("--demo-users", action="store_true",
+                        help="Also insert sample players so the ranking has content. "
+                             "Never use in production.")
     args = parser.parse_args()
-    asyncio.run(run(reset=args.reset))
+    asyncio.run(run(reset=args.reset, demo_users=args.demo_users))
 
 
 if __name__ == "__main__":
