@@ -15,3 +15,8 @@ class ProgressRepository(BaseRepository[Progress]):
 
     async def list_for_user(self, user_id: str, *, limit: int = 100) -> list[Progress]:
         return await self.list(filter={"user_id": user_id}, limit=limit)
+
+    async def count_completed(self, user_id: str) -> int:
+        """Completed-lesson tally — counted in Mongo rather than by pulling
+        every progress row back just to length-check it."""
+        return await self.count({"user_id": user_id, "completed": True})
