@@ -21,9 +21,12 @@ from app.repositories.phase_repo import PhaseRepository
 from app.repositories.progress_repo import ProgressRepository
 from app.repositories.sign_repo import SignRepository
 from app.repositories.user_repo import UserRepository
+from app.services.achievement_service import AchievementService
 from app.services.auth_service import AuthService
 from app.services.learning_service import LearningService
 from app.services.progress_service import ProgressService
+from app.services.ranking_service import RankingService
+from app.services.user_service import UserService
 
 
 # ---------------- Repositories ----------------------------------------------
@@ -72,6 +75,20 @@ def get_progress_service(
     progress: ProgressRepository = Depends(get_progress_repo),
 ) -> ProgressService:
     return ProgressService(users=users, lessons=lessons, progress=progress)
+
+
+def get_user_service(users: UserRepository = Depends(get_user_repo)) -> UserService:
+    return UserService(users=users)
+
+
+def get_ranking_service(users: UserRepository = Depends(get_user_repo)) -> RankingService:
+    return RankingService(users=users)
+
+
+def get_achievement_service(
+    progress: ProgressRepository = Depends(get_progress_repo),
+) -> AchievementService:
+    return AchievementService(progress=progress)
 
 
 # ---------------- Auth ------------------------------------------------------
