@@ -3,54 +3,62 @@
 @tailwind utilities;
 
 /* -----------------------------------------------------------------------
-   Theme: SINALibras Blue (LIGHT).
-   Cool white canvas, navy text, medium-dark blue as the primary brand,
-   light bright blue as the soft accent. Navy reserved for emphasis only.
-   Palette: #8dcef0 (light), #0446b0 (primary), #031f55 (navy — sparingly).
+   Theme: SINALibras Blue (DARK).
+   Deep navy canvas, near-white text, bright blue as the primary brand +
+   glow, cyan/gold/orange reserved for the gamification currencies.
+   Modeled on the mobile mockup: glowing cards floating on a navy gradient.
 
-   All semantic colors are defined on :root so shadcn components pick
-   them up via the tailwind config (`hsl(var(--background))`, etc.).
+   Palette anchors:
+     #0a1730 (deepest navy — page bottom)
+     #12244d (navy — page top / chrome)
+     #16294f (card surface)
+     #2f7ff0 (primary bright blue + glow)
+     #8dcef0 (accent light blue)
+
+   All semantic colors live on :root so shadcn components pick them up via
+   the tailwind config (`hsl(var(--background))`, etc.). Flipping these
+   values flips the entire app — no component classNames change.
    ----------------------------------------------------------------------- */
 @layer base {
   :root {
-    /* Canvas — cool whites */
-    --background: 210 40% 98%;         /* #F7FAFC cool off-white */
-    --foreground: 220 93% 17%;         /* #031f55 navy (text only) */
+    /* Canvas — deep navy */
+    --background: 221 55% 12%;         /* #0d1c3d navy canvas */
+    --foreground: 214 60% 94%;         /* #e6eefc near-white text */
 
-    --card: 0 0% 100%;                 /* #FFFFFF pure white surface */
-    --card-foreground: 220 93% 17%;
+    --card: 219 52% 19%;               /* #172f4f card surface (lifts off bg) */
+    --card-foreground: 214 60% 94%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 93% 17%;
+    --popover: 220 54% 16%;            /* #132747 slightly darker than card */
+    --popover-foreground: 214 60% 94%;
 
-    /* Brand — medium-dark blue primary, light blue accent. */
-    --primary: 217 96% 35%;            /* #0446b0 medium-dark blue */
+    /* Brand — bright blue primary, light blue accent. */
+    --primary: 214 88% 56%;            /* #2f7ff0 bright blue */
     --primary-foreground: 0 0% 100%;   /* white text on primary buttons */
 
-    --secondary: 201 70% 92%;          /* #DCEEF9 very pale blue */
-    --secondary-foreground: 220 93% 17%;
+    --secondary: 218 45% 24%;          /* #21386a muted navy panel */
+    --secondary-foreground: 214 60% 94%;
 
-    --muted: 210 40% 96%;              /* #F1F5F9 cool muted */
-    --muted-foreground: 218 25% 40%;   /* #525E7A muted slate-blue */
+    --muted: 219 45% 22%;              /* #1f3560 muted surface */
+    --muted-foreground: 214 30% 72%;   /* #a3b6d6 muted slate-blue */
 
-    --accent: 201 79% 75%;             /* #8dcef0 light bright blue */
-    --accent-foreground: 220 93% 17%;  /* navy on light blue for contrast */
+    --accent: 201 79% 68%;             /* #6fbef0 light bright blue */
+    --accent-foreground: 220 60% 12%;  /* navy text on the light accent */
 
-    --destructive: 0 84% 50%;          /* #DC2626 deeper red for white bg */
+    --destructive: 0 72% 55%;          /* #d94141 red that reads on navy */
     --destructive-foreground: 0 0% 100%;
 
-    --border: 210 35% 88%;             /* #D5DEE9 light cool border */
-    --input: 210 40% 94%;              /* #E6EDF5 input bg */
-    --ring: 217 96% 35%;               /* focus ring = primary blue */
+    --border: 217 42% 30%;             /* #2c477a subtle light border on navy */
+    --input: 219 45% 22%;              /* input bg matches muted surface */
+    --ring: 214 88% 60%;               /* focus ring = bright blue */
 
     --radius: 1rem;
 
-    /* Chart colors — tuned for light background legibility */
-    --chart-1: 217 96% 35%;            /* primary blue */
-    --chart-2: 201 79% 60%;            /* mid bright blue */
-    --chart-3: 220 93% 17%;            /* navy */
-    --chart-4: 142 71% 40%;            /* forest green */
-    --chart-5: 271 76% 50%;            /* royal purple */
+    /* Chart colors — tuned for dark background legibility */
+    --chart-1: 214 88% 60%;            /* bright blue */
+    --chart-2: 201 79% 68%;            /* light blue */
+    --chart-3: 41 96% 56%;             /* gold */
+    --chart-4: 142 65% 52%;            /* green */
+    --chart-5: 271 76% 66%;            /* purple */
   }
 }
 
@@ -60,22 +68,25 @@
   }
 
   html {
-    color-scheme: light;
+    color-scheme: dark;
   }
 
   body {
     @apply text-foreground font-sans antialiased;
     margin: 0;
     min-height: 100vh;
-    /* Fixed vertical gradient kept in the light/mid range so it stays
-       calm next to white cards. The top is the bright accent blue, the
-       bottom is a medium blue (never the primary navy-ish #0446b0 —
-       that's reserved for the chrome: sidebar + header). */
+    /* Fixed navy gradient — bright-ish navy at the top fading to the
+       deepest navy at the bottom, so glowing cards read as floating. */
     background:
+      radial-gradient(
+        1200px 800px at 70% -10%,
+        rgba(47, 127, 240, 0.18) 0%,
+        transparent 55%
+      ),
       linear-gradient(
         180deg,
-        #b8dff4 0%,
-        #6ea9d8 100%
+        #12244d 0%,
+        #0a1730 100%
       ) fixed;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -83,7 +94,8 @@
 
   /* Accessibility: always-visible focus ring on keyboard navigation. */
   *:focus-visible {
-    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+    @apply outline-none ring-2 ring-ring ring-offset-2;
+    --tw-ring-offset-color: hsl(var(--background));
   }
 }
 
@@ -119,23 +131,23 @@
 }
 
 /* -----------------------------------------------------------------------
-   Animated blue gradient — used by hero sections. Opaque so the card
-   actually reads as a surface against the page background gradient.
+   Glowing blue hero surface — used by big CTAs (JOGAR / COMEÇAR) and
+   feature cards. Opaque navy with an inner sheen so it reads as a raised
+   glass panel on the darker page.
    ----------------------------------------------------------------------- */
 @layer utilities {
   .bg-blue-hero {
-    background: linear-gradient(
-      135deg,
-      #e6f3fb 0%,
-      #c4def0 50%,
-      #a3cbe9 100%
-    );
-    background-size: 200% 200%;
-    animation: blue-hero-shift 12s ease-in-out infinite;
+    background:
+      radial-gradient(120% 140% at 50% -20%, rgba(47, 127, 240, 0.45) 0%, transparent 60%),
+      linear-gradient(160deg, #1c3a72 0%, #142c58 60%, #0f2549 100%);
+    background-color: #142c58;
   }
 
-  @keyframes blue-hero-shift {
-    0%, 100% { background-position: 0% 50%; }
-    50%      { background-position: 100% 50%; }
+  /* Faint decorative hands/waves live behind hero content in the mockup.
+     A subtle repeating sheen keeps the panel from feeling flat. */
+  .bg-card-glow {
+    background:
+      linear-gradient(160deg, rgba(47, 127, 240, 0.16) 0%, rgba(20, 44, 88, 0) 55%),
+      hsl(var(--card));
   }
 }

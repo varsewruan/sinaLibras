@@ -8,12 +8,15 @@ import { BootSplash } from "@/components/BootSplash";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Toaster } from "@/components/ui/sonner";
 import { queryClient } from "@/lib/query";
+import Achievements from "@/pages/Achievements";
 import Dictionary from "@/pages/Dictionary";
 import Home from "@/pages/Home";
+import Learn from "@/pages/Learn";
 import Lesson from "@/pages/Lesson";
 import Lessons from "@/pages/Lessons";
 import Login from "@/pages/Login";
 import Profile from "@/pages/Profile";
+import Ranking from "@/pages/Ranking";
 import Register from "@/pages/Register";
 
 const Protected = ({ children }) => <ProtectedRoute>{children}</ProtectedRoute>;
@@ -39,9 +42,12 @@ const AnimatedRoutes = () => {
           <Route path="/login"        element={<Login />} />
           <Route path="/register"     element={<Register />} />
           <Route path="/"             element={<Protected><Home /></Protected>} />
+          <Route path="/learn"        element={<Protected><Learn /></Protected>} />
           <Route path="/lessons"      element={<Protected><Lessons /></Protected>} />
           <Route path="/lesson/:id"   element={<Protected><Lesson /></Protected>} />
           <Route path="/dictionary"   element={<Protected><Dictionary /></Protected>} />
+          <Route path="/ranking"      element={<Protected><Ranking /></Protected>} />
+          <Route path="/achievements" element={<Protected><Achievements /></Protected>} />
           <Route path="/profile"      element={<Protected><Profile /></Protected>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
