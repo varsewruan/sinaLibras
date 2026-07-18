@@ -3,8 +3,9 @@
  * profile). Right: XP (gold star), gems (cyan), notifications, settings.
  *
  * The star/level numbers roll in via framer-motion so an XP gain feels
- * rewarding. The streak lives in the sidebar (desktop) — here we surface XP
- * and the cosmetic gem currency, matching the reference layout.
+ * rewarding. Since the sidebar was removed this bar carries the streak too —
+ * it was the sidebar's only unique content, and losing it would have made the
+ * streak invisible on desktop.
  */
 
 import { Link } from "react-router-dom";
@@ -63,9 +64,19 @@ export const Header = () => {
   return (
     <header className="sticky top-0 z-30 bg-[#0e1f3d]/95 backdrop-blur border-b border-white/10 shadow-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
-        {/* Mobile logo (sidebar is hidden < lg) */}
-        <Link to="/" className="lg:hidden flex items-center gap-1.5 mr-1" aria-label="Início">
-          <Hand className="w-6 h-6 text-primary -rotate-12" strokeWidth={2.5} />
+        {/* Visible at every breakpoint: with the sidebar gone this is the only
+            way back to the hub on desktop. Hiding it strands the user on
+            whatever page they clicked into. */}
+        <Link
+          to="/"
+          className="flex items-center gap-2 shrink-0 mr-2 border-r border-white/10 pr-4 sm:mr-4"
+          aria-label="Início"
+        >
+          <Hand className="w-6 h-6 text-primary -rotate-12 shrink-0" strokeWidth={2.5} aria-hidden="true" />
+          <span className="hidden md:inline text-lg font-black tracking-tight leading-none">
+            <span className="text-brand-yellow">SINA</span>
+            <span className="text-[#4a97ff]">Libras</span>
+          </span>
         </Link>
 
         {/* Identity — links to profile */}
@@ -87,8 +98,7 @@ export const Header = () => {
             icon={Gem} value={gems} color="#38BDF8" label="Gemas" testId="stat-gems"
             trailing={<Plus className="w-3 h-3 text-gem" strokeWidth={3} aria-hidden="true" />}
           />
-          {/* Streak also lives in the desktop sidebar; the mockup puts it in
-              the top bar too, which is the only place mobile users see it. */}
+          {/* The only place the streak appears now that the sidebar is gone. */}
           <div className="hidden sm:block">
             <StatPill icon={Flame} value={streak} color="#FB923C" label="Sequência" testId="stat-streak" />
           </div>

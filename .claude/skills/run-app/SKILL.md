@@ -113,10 +113,10 @@ nunca casa. E `a[href="/profile"]` resolve primeiro no BottomNav, que fica
 
 Todas as rotas exceto `/login` e `/register` são `<Protected>` — logue antes.
 
-No **desktop a sidebar só tem Início + Aprender**, de propósito
-(`lib/nav-items.js`). Ranking / Conquistas / Perfil só são alcançáveis pelos
-tiles da Home e pelo avatar, o que torna esses cliques o único caminho vivo —
-vale testá-los sempre.
+**Não existe sidebar** (removida em 2026-07-18). No desktop a navegação é: os
+tiles da Home, o avatar do topo (Perfil) e a marca do Header (volta pro
+início). Isso torna esses cliques o único caminho vivo — vale testá-los
+sempre. No mobile o `BottomNav` (`lib/nav-items.js`) continua com 4 abas.
 
 A Home é um **grid de 6 tiles, sem botão JOGAR** (mockup de 2026-07-18). O CTA
 que retoma a próxima lição é o `cta-comecar`, na página Aprender.
