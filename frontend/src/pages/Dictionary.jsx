@@ -16,11 +16,10 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
 import { useSearchSigns } from "@/lib/hooks/useSearchSigns";
-import { resolveSignUrl } from "@/lib/env";
 import { LibrasButton } from "@/components/LibrasButton";
+import { SignMedia } from "@/components/SignMedia";
 
 const SignCard = ({ sign, index }) => {
-  const src = resolveSignUrl(sign.thumbnail_url);
   return (
   <motion.div
     initial={{ opacity: 0, y: 8 }}
@@ -29,18 +28,11 @@ const SignCard = ({ sign, index }) => {
   >
     <Card className="overflow-hidden hover:border-accent transition-colors h-full">
       <div className="aspect-video bg-muted overflow-hidden">
-        {src ? (
-          <img
-            src={src}
-            alt={sign.text_description || `Sinal: ${sign.portuguese_term}`}
-            className="w-full h-full object-cover"
-            loading="lazy"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">
-            Sem prévia
-          </div>
-        )}
+        <SignMedia
+          sign={sign}
+          className="w-full h-full object-cover"
+          fallbackClassName="w-full h-full"
+        />
       </div>
       <CardContent className="p-4 space-y-3">
         <h3 className="font-bold text-lg">{sign.portuguese_term}</h3>
@@ -49,12 +41,7 @@ const SignCard = ({ sign, index }) => {
             {sign.text_description}
           </p>
         )}
-        <LibrasButton
-          term={sign.portuguese_term}
-          thumbnailUrl={sign.thumbnail_url}
-          size="sm"
-          className="w-full"
-        />
+        <LibrasButton sign={sign} size="sm" className="w-full" />
       </CardContent>
     </Card>
   </motion.div>

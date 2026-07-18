@@ -18,7 +18,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useCompleteLesson, useLesson } from "@/lib/hooks/useLearning";
 import { playComplete, playCorrect, playWrong } from "@/lib/audio";
-import { resolveSignUrl } from "@/lib/env";
+import { SignMedia } from "@/components/SignMedia";
 
 // ---------- helpers ---------------------------------------------------------
 
@@ -103,18 +103,12 @@ const Question = ({ question, index, total, onAnswer }) => {
       <Card>
         <CardContent className="p-6 space-y-6">
           <div className="aspect-video bg-muted rounded-xl overflow-hidden flex items-center justify-center">
-            {(() => {
-              const src = resolveSignUrl(question.sign.thumbnail_url);
-              return src ? (
-                <img
-                  src={src}
-                  alt={question.sign.text_description || `Sinal: ${question.sign.portuguese_term}`}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <span className="text-muted-foreground">Sem imagem</span>
-              );
-            })()}
+            <SignMedia
+              sign={question.sign}
+              className="w-full h-full object-cover"
+              fallbackClassName="w-full h-full"
+              fallbackLabel="Sem imagem"
+            />
           </div>
           <h3 className="text-xl font-bold text-center">Qual é este sinal?</h3>
           <div className="grid grid-cols-2 gap-3" aria-keyshortcuts="1 2 3 4">
