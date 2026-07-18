@@ -1,0 +1,52 @@
+{
+  "Bom dia": {
+    "mp4": "/signs/video/bom-dia.mp4",
+    "poster": "/signs/video/bom-dia-poster.jpg",
+    "webm": "/signs/video/bom-dia.webm"
+  },
+  "Filho": {
+    "mp4": "/signs/video/filho.mp4",
+    "poster": "/signs/video/filho-poster.jpg",
+    "webm": "/signs/video/filho.webm"
+  },
+  "Irmã": {
+    "mp4": "/signs/video/irmao.mp4",
+    "poster": "/signs/video/irmao-poster.jpg",
+    "webm": "/signs/video/irmao.webm"
+  },
+  "Irmão": {
+    "mp4": "/signs/video/irmao.mp4",
+    "poster": "/signs/video/irmao-poster.jpg",
+    "webm": "/signs/video/irmao.webm"
+  },
+  "Mãe": {
+    "mp4": "/signs/video/mae.mp4",
+    "poster": "/signs/video/mae-poster.jpg",
+    "webm": "/signs/video/mae.webm"
+  },
+  "Pai": {
+    "mp4": "/signs/video/pai.mp4",
+    "poster": "/signs/video/pai-poster.jpg",
+    "webm": "/signs/video/pai.webm"
+  },
+  "Primo": {
+    "mp4": "/signs/video/primo.mp4",
+    "poster": "/signs/video/primo-poster.jpg",
+    "webm": "/signs/video/primo.webm"
+  },
+  "Tia": {
+    "mp4": "/signs/video/tio.mp4",
+    "poster": "/signs/video/tio-poster.jpg",
+    "webm": "/signs/video/tio.webm"
+  },
+  "Tio": {
+    "mp4": "/signs/video/tio.mp4",
+    "poster": "/signs/video/tio-poster.jpg",
+    "webm": "/signs/video/tio.webm"
+  },
+  "Tudo bem?": {
+    "mp4": "/signs/video/tudo-bem.mp4",
+    "poster": "/signs/video/tudo-bem-poster.jpg",
+    "webm": "/signs/video/tudo-bem.webm"
+  }
+}

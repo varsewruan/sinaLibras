@@ -43,7 +43,11 @@ class SignView(BaseModel):
     libras_description: str = ""
     text_description: str = ""
     thumbnail_url: Optional[str] = None
+    # video_url is the flattened MP4 and video_webm_url the alpha-preserving
+    # WebM; the frontend offers both to the browser and lets it choose.
     video_url: Optional[str] = None
+    video_webm_url: Optional[str] = None
+    poster_url: Optional[str] = None
 
     @classmethod
     def from_sign(cls, sign: "Sign") -> "SignView":
@@ -54,6 +58,8 @@ class SignView(BaseModel):
             text_description=sign.text_description,
             thumbnail_url=str(sign.thumbnail_url) if sign.thumbnail_url else None,
             video_url=str(sign.video_url) if sign.video_url else None,
+            video_webm_url=str(sign.video_webm_url) if sign.video_webm_url else None,
+            poster_url=str(sign.poster_url) if sign.poster_url else None,
         )
 
 

@@ -42,7 +42,7 @@ CATALOG_TERMS: list[str] = [
     # Phase 2 — Família
     "Pai", "Mãe", "Filho", "Filha",
     "Irmão", "Irmã", "Bebê", "Família",
-    "Avô", "Avó", "Tio", "Tia",
+    "Avô", "Avó", "Tio", "Tia", "Primo",
     # Phase 3 — Cores
     "Vermelho", "Azul", "Amarelo", "Verde",
     "Branco", "Preto", "Cinza", "Marrom",
@@ -59,7 +59,7 @@ EMOJI_BY_TERM: dict[str, str] = {
     # Família
     "Pai": "👨", "Mãe": "👩", "Filho": "👦", "Filha": "👧",
     "Irmão": "👬", "Irmã": "👭", "Bebê": "👶", "Família": "👨‍👩‍👧‍👦",
-    "Avô": "👴", "Avó": "👵", "Tio": "🧔", "Tia": "🧑",
+    "Avô": "👴", "Avó": "👵", "Tio": "🧔", "Tia": "🧑", "Primo": "🧑‍🤝‍🧑",
     # Cores — emoji is literally the color
     "Vermelho": "🔴", "Azul": "🔵", "Amarelo": "🟡", "Verde": "🟢",
     "Branco": "⚪", "Preto": "⚫", "Cinza": "🌫️", "Marrom": "🟤",
@@ -73,9 +73,6 @@ PALETTE_BY_TERM: dict[str, tuple[str, str, str, str]] = {}
 # Cumprimentos — navy → primary blue (white text)
 for term in CATALOG_TERMS[0:12]:
     PALETTE_BY_TERM[term] = ("#031f55", "#0446b0", "#FFFFFF", "CUMPRIMENTO")
-# Família — peach → orange
-for term in CATALOG_TERMS[12:24]:
-    PALETTE_BY_TERM[term] = ("#FED7AA", "#EA580C", "#1F1611", "FAMÍLIA")
 
 # Cores — each term has its own bg
 COLOR_PALETTE: dict[str, tuple[str, str, str]] = {
@@ -94,6 +91,14 @@ COLOR_PALETTE: dict[str, tuple[str, str, str]] = {
 }
 for term, (a, b, txt) in COLOR_PALETTE.items():
     PALETTE_BY_TERM[term] = (a, b, txt, "COR")
+
+# Família — peach → orange. Derived (everything that is neither a greeting nor
+# a colour) instead of a fixed CATALOG_TERMS slice: the family group grows as
+# real footage arrives, and a hardcoded slice would silently mis-tint the
+# terms that fall off the end.
+for term in CATALOG_TERMS[12:]:
+    if term not in COLOR_PALETTE:
+        PALETTE_BY_TERM[term] = ("#FED7AA", "#EA580C", "#1F1611", "FAMÍLIA")
 
 
 # ----------------------------- Helpers --------------------------------------

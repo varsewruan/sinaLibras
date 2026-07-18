@@ -51,6 +51,21 @@ def _load_manifest() -> dict[str, str]:
     return json.loads(manifest_path.read_text(encoding="utf-8"))
 
 
+def _load_video_manifest() -> dict[str, dict[str, str]]:
+    """Map term → {mp4, webm, poster} from scripts/build_sign_videos.py.
+
+    Empty dict when no footage has been transcoded yet: signs keep their SVG
+    placeholder and the frontend renders the image path. Most of the catalog
+    sits in that state — only terms with real captures appear here.
+    """
+    settings = get_settings()
+    manifest_path = Path(settings.SIGNS_DIR) / "video-manifest.json"
+    if not manifest_path.is_file():
+        logger.info("seed_video_manifest_missing", path=str(manifest_path))
+        return {}
+    return json.loads(manifest_path.read_text(encoding="utf-8"))
+
+
 # ----------------------------- Content definition ---------------------------
 
 CATALOG = [
@@ -76,8 +91,8 @@ CATALOG = [
              "signs": ["Pai", "Mãe", "Filho", "Filha"]},
             {"order": 2, "title": "Irmãos", "xp_reward": 25,
              "signs": ["Irmão", "Irmã", "Bebê", "Família"]},
-            {"order": 3, "title": "Avós e tios", "xp_reward": 30,
-             "signs": ["Avô", "Avó", "Tio", "Tia"]},
+            {"order": 3, "title": "Avós, tios e primos", "xp_reward": 30,
+             "signs": ["Avô", "Avó", "Tio", "Tia", "Primo"]},
         ],
     },
     {
@@ -121,28 +136,48 @@ def _placeholder_url(term: str) -> str:
 
 # ----------------------------- Seeding logic --------------------------------
 
-async def _seed_sign(db: AsyncIOMotorDatabase, term: str, *, manifest: dict[str, str]) -> str:
-    """Upsert the sign and keep its thumbnail in sync with the manifest."""
-    thumbnail_url = manifest.get(term) or _placeholder_url(term)
+async def _seed_sign(
+    db: AsyncIOMotorDatabase,
+    term: str,
+    *,
+    manifest: dict[str, str],
+    videos: dict[str, dict[str, str]],
+) -> str:
+    """Upsert the sign and keep its media in sync with both manifests."""
+    video = videos.get(term) or {}
+    assets = {
+        "thumbnail_url": manifest.get(term) or _placeholder_url(term),
+        # Doubles as the card's caption and the media element's accessible
+        # name, so it has to track whether footage actually exists — a filmed
+        # sign captioned "placeholder" reads as a bug to the user.
+        "text_description": (
+            f"Sinal de '{term}' em Libras, demonstrado em vídeo."
+            if video else
+            f"Sinal de '{term}' — ilustração provisória até o vídeo chegar."
+        ),
+        # None (not absent) when a term has no footage, so a clip that gets
+        # pulled — e.g. a defective capture removed from SOURCE_MAP — actually
+        # clears the stale URL instead of leaving a 404 behind.
+        "video_url": video.get("mp4"),
+        "video_webm_url": video.get("webm"),
+        "poster_url": video.get("poster"),
+    }
 
     existing = await db.signs.find_one({"portuguese_term": term})
     if existing:
-        # Catch the seed → asset-rebuild → re-seed cycle: update the
-        # thumbnail in place when the manifest URL drifts.
-        if existing.get("thumbnail_url") != thumbnail_url:
-            await db.signs.update_one(
-                {"_id": existing["_id"]},
-                {"$set": {"thumbnail_url": thumbnail_url}},
-            )
-            logger.info("seed_sign_thumbnail_updated", term=term, id=existing["_id"])
+        # Catch the seed → asset-rebuild → re-seed cycle: update media in
+        # place when a manifest URL drifts.
+        drifted = {k: v for k, v in assets.items() if existing.get(k) != v}
+        if drifted:
+            await db.signs.update_one({"_id": existing["_id"]}, {"$set": drifted})
+            logger.info("seed_sign_media_updated", term=term, id=existing["_id"],
+                        fields=sorted(drifted))
         return existing["_id"]
 
     sign = Sign(
         portuguese_term=term,
         libras_description=f"Demonstração do sinal '{term}' em Libras.",
-        text_description=f"Sinal de '{term}' — substitua pelo vídeo real quando o conteúdo chegar.",
-        thumbnail_url=thumbnail_url,
-        video_url=None,
+        **assets,
     )
     await db.signs.insert_one(sign.to_mongo())
     logger.info("seed_sign_inserted", term=term, id=sign.id)
@@ -220,6 +255,10 @@ async def run(*, reset: bool, demo_users: bool = False) -> None:
     if manifest:
         logger.info("seed_manifest_loaded", terms=len(manifest))
 
+    videos = _load_video_manifest()
+    if videos:
+        logger.info("seed_video_manifest_loaded", terms=len(videos))
+
     if reset:
         logger.warning("seed_reset", note="dropping phases / lessons / signs collections")
         await db.phases.drop()
@@ -236,7 +275,7 @@ async def run(*, reset: bool, demo_users: bool = False) -> None:
         )
         for lesson_def in phase_def["lessons"]:
             sign_ids = [
-                await _seed_sign(db, term, manifest=manifest)
+                await _seed_sign(db, term, manifest=manifest, videos=videos)
                 for term in lesson_def["signs"]
             ]
             await _seed_lesson(
