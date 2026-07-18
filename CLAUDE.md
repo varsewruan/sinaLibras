@@ -23,6 +23,9 @@ docker compose up backend mongo                    # só back + db (rodar front 
 docker compose exec backend python -m scripts.seed # popula o banco (fases/lições/sinais)
 docker compose exec backend python -m scripts.seed --demo-users  # + ~10 jogadores fake p/ o ranking
 docker compose exec backend python -m pytest -v    # testa backend
+
+# transcodifica os .mov crus -> webm+mp4+poster (roda NATIVO, precisa de ffmpeg)
+cd backend; python -m scripts.build_sign_videos --src "<pasta dos .mov>" --list
 docker compose down -v                             # derruba + apaga volume do mongo
 ```
 
@@ -38,6 +41,7 @@ Frontend nativo: `cd frontend && yarn install && yarn start`.
 - **Repositories + services**: routers chamam services, services chamam repositories. Não acessar `db` direto no router.
 - **Mongo nos testes é real**, não mock — `backend/tests/conftest.py` usa um banco isolado por sessão. Não introduzir mocks aqui.
 - **Sinais**: nomes em kebab-case (`bom-dia`, `tudo-bem`). Os SVGs em `backend/static/signs/` são gerados por `backend/scripts/build_sign_assets.py`; servidos em `/signs/<nome>.svg`.
+- **Vídeos de sinais**: 10 dos 37 termos têm filmagem real (`backend/static/signs/video/`, ~1 MB commitado). O resto usa o SVG. Quem decide entre os dois é `frontend/src/components/SignMedia.jsx` — **não colocar `<video>` ou `<img>` de sinal direto numa página**, use esse componente.
 - **Avatares**: o allowlist vive no backend (`app/models/user.py::AVATAR_IDS`) e é a autoridade — um id fora dele nunca é persistido (422). O frontend (`frontend/src/lib/avatars.js`) só mapeia id → gradiente + emoji. **Manter as duas listas em sync**; não há assets de imagem.
 
 ## Pegadinhas / decisões fixas
@@ -47,6 +51,11 @@ Frontend nativo: `cd frontend && yarn install && yarn start`.
 - **Streak das conquistas usa `streak.longest`**, não `current` — senão a medalha some no dia em que o usuário perde a sequência.
 - **Ranking usa "competition ranking"**: empatados em XP dividem o mesmo rank (1,2,2,4). Isso é obrigatório — o rank de quem está *fora* da página é derivado de `count_with_more_xp`, e um `enumerate()` posicional faria o mesmo usuário ver números diferentes conforme o `limit`. Ver `_competition_ranks` + `test_own_rank_does_not_depend_on_limit`.
 - **O bloqueio das lições no caminho é só UI.** `/lesson/:id` continua acessível direto; o conteúdo é público, não há o que proteger no servidor.
+- **Dois encodes por vídeo, de propósito.** `build_sign_videos.py` gera `<slug>.webm` (VP9 com alpha vivo) e `<slug>.mp4` (H.264 com o fundo achatado). Nenhum codec dá transparência em todo lugar: Safari não decodifica VP9-alpha, e HEVC-com-alpha exige encoder de macOS. A ordem dos `<source>` no `SignMedia` é carregada — WebM primeiro, ou o Chrome se contenta com o MP4 chapado.
+  - **O MP4 tem `--card` (#172f4f) queimado no fundo.** Mudou a cor do card no `index.css`? Rode o script de novo, senão os vídeos ficam com retalho de cor errada no Safari.
+  - **ffmpeg não é dependência do repo** — é ferramenta de máquina de quem gera os assets. Os `.mov` originais (~560 MB) ficam fora do git.
+- **A fonte dos vídeos tem defeitos, e o script sabe disso.** No topo de `build_sign_videos.py`: `DEFECTIVE` retém 3 clipes cujo RGB foi destruído por uma remoção de marca d'água malfeita (irrecuperável — só reexportando do original), e `CROP_HEIGHT` corta a legenda queimada do "Bom dia". **Legenda queimada em lição é a resposta do quiz impressa na tela** — se entrar clipe novo com texto, corte ou retenha.
+- **`SOURCE_MAP` mapeia arquivo → termos, não 1:1.** "Tio - Tia" e "Irmãos" cobrem dois termos cada, apontando pro mesmo arquivo em vez de duplicar bytes.
 - **VLibras está morto**. O player 3D oficial (`vlibras-player-webjs`) e o proxy `backend/app/routers/vlibras.py` foram removidos em 2026-05-26 porque `vlibras.gov.br/dict-static` responde 403 sem mirror público. O `LibrasButton` atual abre um `<Dialog>` com o SVG estático. **Não tentar reativar.** Alternativas viáveis: hostar bundles localmente (se conseguir os `.bundle`), ou trocar por outro avatar 3D.
 - **CRA + craco**, não Vite. Não migrar sem combinar.
 - **Yarn 1**, não npm. `yarn.lock` é o lockfile autoritativo.
@@ -72,5 +81,6 @@ Sprints que só mexem em docs (README, este arquivo) podem pular o `docker compo
 | Caminho de fases (estilo Duolingo) | `frontend/src/pages/Lessons.jsx`, `components/LessonNode.jsx`, `components/PhaseBanner.jsx` |
 | Nível / gemas a partir do XP | `frontend/src/lib/level.js` |
 | Sinais / dicionário | `backend/app/repositories/sign_repo.py`, `frontend/src/pages/Dictionary.jsx`, `frontend/src/lib/hooks/useSearchSigns.js` |
+| Vídeo de sinal (transcodificar / exibir) | `backend/scripts/build_sign_videos.py`, `frontend/src/components/SignMedia.jsx`, `backend/app/models/learning.py` (`SignView`) |
 | Configuração / env | `backend/app/core/config.py`, `backend/.env.example`, `frontend/src/lib/env.js`, `frontend/.env.example` |
 | Rodar / verificar o app end-to-end | `.claude/skills/run-app/SKILL.md` (docker + seed + dirige o SPA no Chromium) + `drive.js` |
