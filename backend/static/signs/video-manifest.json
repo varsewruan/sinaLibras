@@ -1,4 +1,14 @@
 {
+  "Boa noite": {
+    "mp4": "/signs/video/boa-noite.mp4",
+    "poster": "/signs/video/boa-noite-poster.jpg",
+    "webm": "/signs/video/boa-noite.webm"
+  },
+  "Boa tarde": {
+    "mp4": "/signs/video/boa-tarde.mp4",
+    "poster": "/signs/video/boa-tarde-poster.jpg",
+    "webm": "/signs/video/boa-tarde.webm"
+  },
   "Bom dia": {
     "mp4": "/signs/video/bom-dia.mp4",
     "poster": "/signs/video/bom-dia-poster.jpg",
@@ -23,6 +33,11 @@
     "mp4": "/signs/video/mae.mp4",
     "poster": "/signs/video/mae-poster.jpg",
     "webm": "/signs/video/mae.webm"
+  },
+  "Olá": {
+    "mp4": "/signs/video/ola.mp4",
+    "poster": "/signs/video/ola-poster.jpg",
+    "webm": "/signs/video/ola.webm"
   },
   "Pai": {
     "mp4": "/signs/video/pai.mp4",

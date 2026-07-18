@@ -46,6 +46,9 @@ from scripts.build_sign_assets import slugify
 # files rather than duplicating the bytes; the file is named after the first
 # term's slug.
 SOURCE_MAP: dict[str, list[str]] = {
+    "Boa noite_1_1": ["Boa noite"],
+    "Boa tarde_1":  ["Boa tarde"],
+    "Oi - Olá_1":   ["Olá"],
     "Bom dia_1":    ["Bom dia"],
     "Filho_1":      ["Filho"],
     "Irmãos_1":     ["Irmão", "Irmã"],
@@ -56,14 +59,15 @@ SOURCE_MAP: dict[str, list[str]] = {
     "Tudo bem_1":   ["Tudo bem?"],
 }
 
-# Clips held back because the source has a rectangular block of destroyed
-# pixels over the torso (looks like a botched watermark removal). It is baked
-# into the RGB, not just the alpha mask, so nothing here can recover it — the
-# fix is a clean re-export from the original footage.
+# Clips whose source has a rectangular block of destroyed pixels over the
+# torso — a botched watermark removal, baked into the RGB and not just the
+# alpha mask, so nothing here can recover it. The fix is a clean re-export
+# from the original footage.
 #
-# These terms keep their SVG placeholder until then. Move an entry up into
-# SOURCE_MAP once a good capture exists.
-DEFECTIVE: dict[str, list[str]] = {
+# They ship anyway: a visible blemish beats no demo at all for the greetings,
+# which are the first phase a learner sees. Move an entry here into nothing —
+# just drop it from SOURCE_MAP — to fall back to the SVG placeholder instead.
+DAMAGED: dict[str, list[str]] = {
     "Boa noite_1_1": ["Boa noite"],
     "Boa tarde_1":   ["Boa tarde"],
     "Oi - Olá_1":    ["Olá"],
@@ -227,8 +231,8 @@ def main() -> None:
         for source, slug, terms in plan:
             mb = source.stat().st_size / 1024 / 1024
             print(f"  {slug:12} <- {source.name:18} ({mb:6.1f} MB)  ->  {', '.join(terms)}")
-        for stem, terms in DEFECTIVE.items():
-            print(f"  {'(defeito)':12} <- {stem + '.mov':18} {'':13}  ->  {', '.join(terms)}")
+        for stem in DAMAGED:
+            print(f"  {'^ avariado':12}    {stem + '.mov'}")
         return
 
     if not plan:
@@ -284,9 +288,9 @@ def main() -> None:
     print(f"{len(plan)} clipe(s) → {len(manifest)} termo(s) com vídeo")
     print(f"{total_in / 1024 / 1024:.0f} MB de origem → {total_out / 1024 / 1024:.1f} MB entregues")
     print(f"Manifesto: {manifest_path}")
-    if DEFECTIVE:
-        held = sum(len(t) for t in DEFECTIVE.values())
-        print(f"Retidos por defeito na fonte: {held} termo(s) — ver DEFECTIVE no topo do script.")
+    shipped_damaged = [s for s in DAMAGED if s in {p[0].stem for p in plan}]
+    if shipped_damaged:
+        print(f"Com avaria visível na fonte: {len(shipped_damaged)} clipe(s) — ver DAMAGED no topo do script.")
 
 
 if __name__ == "__main__":
