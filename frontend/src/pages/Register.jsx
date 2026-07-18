@@ -1,14 +1,12 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { useAuth } from "@/context/AuthContext";
+import { AuthField, AuthLayout, authInputClass } from "@/components/AuthLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function Register() {
   const { register } = useAuth();
@@ -40,76 +38,66 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, ease: "easeOut" }}
-        className="w-full max-w-md"
-      >
-        <Card className="border-border shadow-2xl">
-          <CardHeader className="text-center space-y-2">
-            <CardTitle className="text-3xl font-black tracking-tight">
-              Bem-vindo(a)!
-            </CardTitle>
-            <CardDescription>Crie sua conta em segundos</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={onSubmit} className="space-y-4" noValidate>
-              <div className="space-y-1.5">
-                <Label htmlFor="name">Nome</Label>
-                <Input
-                  id="name" type="text" required autoComplete="name"
-                  value={name} onChange={(e) => setName(e.target.value)}
-                  data-testid="register-name"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="email">E-mail</Label>
-                <Input
-                  id="email" type="email" required autoComplete="email"
-                  value={email} onChange={(e) => setEmail(e.target.value)}
-                  data-testid="register-email"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="password">Senha</Label>
-                <Input
-                  id="password" type="password" required minLength={8} autoComplete="new-password"
-                  value={password} onChange={(e) => setPassword(e.target.value)}
-                  data-testid="register-password"
-                />
-                <p className="text-xs text-muted-foreground">Mínimo de 8 caracteres.</p>
-              </div>
+    <AuthLayout
+      subtitle="Crie sua conta em segundos"
+      title="Criar conta"
+      footer={
+        <>
+          Já tem conta?{" "}
+          <Link to="/login" className="font-bold text-primary hover:underline">
+            Entrar
+          </Link>
+        </>
+      }
+    >
+      <form onSubmit={onSubmit} className="space-y-4" noValidate>
+        <AuthField id="name" label="Nome">
+          <Input
+            id="name" type="text" required autoComplete="name"
+            className={authInputClass}
+            value={name} onChange={(e) => setName(e.target.value)}
+            data-testid="register-name"
+          />
+        </AuthField>
 
-              {error && (
-                <p
-                  role="alert" aria-live="polite"
-                  className="text-sm text-destructive font-medium"
-                  data-testid="register-error"
-                >
-                  {error}
-                </p>
-              )}
+        <AuthField id="email" label="E-mail">
+          <Input
+            id="email" type="email" required autoComplete="email"
+            className={authInputClass}
+            value={email} onChange={(e) => setEmail(e.target.value)}
+            data-testid="register-email"
+          />
+        </AuthField>
 
-              <Button
-                type="submit" disabled={pending}
-                className="w-full font-bold uppercase tracking-wider"
-                data-testid="register-submit"
-              >
-                {pending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Criar conta"}
-              </Button>
-            </form>
+        <AuthField id="password" label="Senha" hint="Mínimo de 8 caracteres.">
+          <Input
+            id="password" type="password" required minLength={8} autoComplete="new-password"
+            className={authInputClass}
+            value={password} onChange={(e) => setPassword(e.target.value)}
+            data-testid="register-password"
+          />
+        </AuthField>
 
-            <p className="mt-6 text-center text-sm text-muted-foreground">
-              Já tem conta?{" "}
-              <Link to="/login" className="text-primary font-bold hover:underline">
-                Entrar
-              </Link>
-            </p>
-          </CardContent>
-        </Card>
-      </motion.div>
-    </div>
+        {error && (
+          <p
+            role="alert" aria-live="polite"
+            className="rounded-lg bg-destructive/15 px-3 py-2 text-sm font-bold text-[#ffb4b4] ring-1 ring-destructive/40"
+            data-testid="register-error"
+          >
+            {error}
+          </p>
+        )}
+
+        {/* The only action on the screen, so it gets the yellow. */}
+        <Button
+          type="submit" disabled={pending}
+          variant="yellow3d"
+          className="h-12 w-full text-base font-black uppercase tracking-wider"
+          data-testid="register-submit"
+        >
+          {pending ? <Loader2 className="h-5 w-5 animate-spin" /> : "Criar conta"}
+        </Button>
+      </form>
+    </AuthLayout>
   );
 }

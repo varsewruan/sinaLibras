@@ -1,14 +1,12 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { useAuth } from "@/context/AuthContext";
+import { AuthField, AuthLayout, authInputClass } from "@/components/AuthLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function Login() {
   const { login } = useAuth();
@@ -37,67 +35,57 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, ease: "easeOut" }}
-        className="w-full max-w-md"
-      >
-        <Card className="border-border shadow-2xl">
-          <CardHeader className="text-center space-y-2">
-            <CardTitle className="text-3xl font-black tracking-tight text-primary">
-              SINALibras
-            </CardTitle>
-            <CardDescription>Entre para continuar sua jornada</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={onSubmit} className="space-y-4" noValidate>
-              <div className="space-y-1.5">
-                <Label htmlFor="email">E-mail</Label>
-                <Input
-                  id="email" type="email" required autoComplete="email"
-                  value={email} onChange={(e) => setEmail(e.target.value)}
-                  data-testid="login-email"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="password">Senha</Label>
-                <Input
-                  id="password" type="password" required autoComplete="current-password"
-                  value={password} onChange={(e) => setPassword(e.target.value)}
-                  data-testid="login-password"
-                />
-              </div>
+    <AuthLayout
+      subtitle="Entre para continuar sua jornada"
+      title="Entrar"
+      footer={
+        <>
+          Não tem conta?{" "}
+          <Link to="/register" className="font-bold text-primary hover:underline">
+            Criar conta
+          </Link>
+        </>
+      }
+    >
+      <form onSubmit={onSubmit} className="space-y-4" noValidate>
+        <AuthField id="email" label="E-mail">
+          <Input
+            id="email" type="email" required autoComplete="email"
+            className={authInputClass}
+            value={email} onChange={(e) => setEmail(e.target.value)}
+            data-testid="login-email"
+          />
+        </AuthField>
 
-              {error && (
-                <p
-                  role="alert" aria-live="polite"
-                  className="text-sm text-destructive font-medium"
-                  data-testid="login-error"
-                >
-                  {error}
-                </p>
-              )}
+        <AuthField id="password" label="Senha">
+          <Input
+            id="password" type="password" required autoComplete="current-password"
+            className={authInputClass}
+            value={password} onChange={(e) => setPassword(e.target.value)}
+            data-testid="login-password"
+          />
+        </AuthField>
 
-              <Button
-                type="submit" disabled={pending}
-                className="w-full font-bold uppercase tracking-wider"
-                data-testid="login-submit"
-              >
-                {pending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Entrar"}
-              </Button>
-            </form>
+        {error && (
+          <p
+            role="alert" aria-live="polite"
+            className="rounded-lg bg-destructive/15 px-3 py-2 text-sm font-bold text-[#ffb4b4] ring-1 ring-destructive/40"
+            data-testid="login-error"
+          >
+            {error}
+          </p>
+        )}
 
-            <p className="mt-6 text-center text-sm text-muted-foreground">
-              Não tem conta?{" "}
-              <Link to="/register" className="text-primary font-bold hover:underline">
-                Criar conta
-              </Link>
-            </p>
-          </CardContent>
-        </Card>
-      </motion.div>
-    </div>
+        {/* The only action on the screen, so it gets the yellow. */}
+        <Button
+          type="submit" disabled={pending}
+          variant="yellow3d"
+          className="h-12 w-full text-base font-black uppercase tracking-wider"
+          data-testid="login-submit"
+        >
+          {pending ? <Loader2 className="h-5 w-5 animate-spin" /> : "Entrar"}
+        </Button>
+      </form>
+    </AuthLayout>
   );
 }

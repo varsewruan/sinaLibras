@@ -1,14 +1,16 @@
-import { useTheme } from "next-themes"
 import { Toaster as Sonner, toast } from "sonner"
 
+// Pinned to dark, not read from next-themes. The app has no ThemeProvider
+// (and never sets `.dark` — see CLAUDE.md), so `useTheme()` resolved to
+// "system" and followed the OS: anyone on a light desktop got white toasts
+// floating over a permanently-navy app. The theme here is not a user choice,
+// so neither is this.
 const Toaster = ({
   ...props
 }) => {
-  const { theme = "system" } = useTheme()
-
   return (
     <Sonner
-      theme={theme}
+      theme="dark"
       className="toaster group"
       toastOptions={{
         classNames: {
