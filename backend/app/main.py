@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import AsyncIterator
 
 from fastapi import APIRouter, FastAPI, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from slowapi import _rate_limit_exceeded_handler
@@ -22,6 +23,7 @@ from slowapi.middleware import SlowAPIMiddleware
 from starlette.middleware.cors import CORSMiddleware
 
 from app.core.config import Settings, get_settings
+from app.core.errors import validation_exception_handler
 from app.core.logging import get_logger, setup_logging
 from app.core.rate_limit import limiter
 from app.db.mongo import close_mongo_connection, connect_to_mongo, ensure_indexes
@@ -66,6 +68,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
     app.add_middleware(SlowAPIMiddleware)
+
+    # Renders pydantic's 422s in Portuguese. Same status and body shape as
+    # FastAPI's default handler — only the `msg` text changes.
+    app.add_exception_handler(RequestValidationError, validation_exception_handler)
 
     # CORS — registered BEFORE any router is included.
     # `allow_origins` is the validated explicit list from Settings (never "*").

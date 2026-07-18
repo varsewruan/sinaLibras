@@ -139,7 +139,10 @@ async def refresh(
     if not refresh_token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={"code": "missing_refresh_token", "message": "no refresh token cookie"},
+            detail={
+                "code": "missing_refresh_token",
+                "message": "Entre na sua conta para continuar.",
+            },
         )
     try:
         user, tokens = await service.refresh(refresh_token)

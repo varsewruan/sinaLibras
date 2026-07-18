@@ -38,7 +38,7 @@ async def get_lesson(
     if detail is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail={"code": "lesson_not_found", "message": "lesson does not exist"},
+            detail={"code": "lesson_not_found", "message": "Esta lição não existe."},
         )
     return detail
 

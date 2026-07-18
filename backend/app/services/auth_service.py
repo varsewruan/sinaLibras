@@ -25,7 +25,12 @@ from app.repositories.user_repo import UserRepository
 
 
 class AuthError(Exception):
-    """Domain-level auth failures (wrong creds, taken email, stale token, etc.)."""
+    """Domain-level auth failures (wrong creds, taken email, stale token, etc.).
+
+    `code` is the machine contract — it's what the SPA and the tests switch
+    on, so it stays in English and must not be translated. `message` is what
+    a person reads on screen, so it's in Portuguese like the rest of the app.
+    """
 
     def __init__(self, code: str, message: str) -> None:
         super().__init__(message)
@@ -54,7 +59,7 @@ class AuthService:
     async def register(self, payload: RegisterRequest) -> tuple[User, IssuedTokens]:
         existing = await self.users.get_by_email(payload.email)
         if existing is not None:
-            raise AuthError("email_taken", "this email is already registered")
+            raise AuthError("email_taken", "Este e-mail já está cadastrado.")
 
         user = User(
             email=payload.email,
@@ -71,10 +76,10 @@ class AuthService:
         # real bcrypt hash so checkpw does the same work either branch.
         if user is None:
             verify_password(payload.password, _DUMMY_HASH)
-            raise AuthError("invalid_credentials", "email or password is incorrect")
+            raise AuthError("invalid_credentials", "E-mail ou senha incorretos.")
 
         if not verify_password(payload.password, user.hashed_password):
-            raise AuthError("invalid_credentials", "email or password is incorrect")
+            raise AuthError("invalid_credentials", "E-mail ou senha incorretos.")
 
         return user, self._issue_tokens(user)
 
@@ -88,14 +93,20 @@ class AuthService:
                 expected_type="refresh",
             )
         except TokenError as exc:
-            raise AuthError("invalid_refresh_token", str(exc)) from exc
+            # The TokenError text ("invalid_token: Signature has expired") was
+            # being handed straight to the client. It's a diagnostic, not a
+            # sentence for a user — and it leaks token internals. `code` still
+            # distinguishes this from every other auth failure.
+            raise AuthError(
+                "invalid_refresh_token", "Sua sessão expirou. Entre novamente."
+            ) from exc
 
         user = await self.users.get(payload["sub"])
         if user is None:
-            raise AuthError("user_not_found", "user no longer exists")
+            raise AuthError("user_not_found", "Esta conta não existe mais.")
 
         if payload["tv"] != user.token_version:
-            raise AuthError("token_revoked", "this token was revoked")
+            raise AuthError("token_revoked", "Sua sessão foi encerrada. Entre novamente.")
 
         return user, self._issue_tokens(user)
 

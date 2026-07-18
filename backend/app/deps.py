@@ -96,6 +96,8 @@ def get_achievement_service(
 ACCESS_COOKIE = "access_token"
 
 
+# `code` is the machine contract (English, never translated); `message` is
+# read by a person, so it's in Portuguese like the rest of the app.
 def _unauthorized(code: str, message: str) -> HTTPException:
     return HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -110,18 +112,20 @@ async def get_current_user(
     settings: Settings = Depends(get_settings),
 ) -> User:
     if not access_token:
-        raise _unauthorized("missing_access_token", "no access token cookie")
+        raise _unauthorized("missing_access_token", "Entre na sua conta para continuar.")
     try:
         payload = decode_token(settings=settings, token=access_token, expected_type="access")
-    except TokenError as exc:
-        raise _unauthorized("invalid_access_token", str(exc))
+    except TokenError:
+        # See auth_service.refresh: the TokenError text is a diagnostic, not a
+        # message for a user, and `code` already carries the distinction.
+        raise _unauthorized("invalid_access_token", "Sua sessão expirou. Entre novamente.")
 
     user = await users.get(payload["sub"])
     if user is None:
-        raise _unauthorized("user_not_found", "user no longer exists")
+        raise _unauthorized("user_not_found", "Esta conta não existe mais.")
 
     if payload["tv"] != user.token_version:
-        raise _unauthorized("token_revoked", "this token was revoked")
+        raise _unauthorized("token_revoked", "Sua sessão foi encerrada. Entre novamente.")
 
     return user
 

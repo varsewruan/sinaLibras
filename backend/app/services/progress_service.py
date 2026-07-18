@@ -49,7 +49,7 @@ class ProgressService:
     ) -> CompleteLessonResponse:
         lesson = await self.lessons.get(payload.lesson_id)
         if lesson is None:
-            raise ProgressError("lesson_not_found", "this lesson does not exist")
+            raise ProgressError("lesson_not_found", "Esta lição não existe.")
 
         passed = payload.score >= PASS_THRESHOLD
         existing = await self.progress.get_for_user_lesson(user.id, lesson.id)

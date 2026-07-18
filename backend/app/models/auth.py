@@ -22,7 +22,7 @@ class RegisterRequest(BaseModel):
         # NIST 800-63B: length matters more than complexity. We reject only
         # the bottom of the barrel; we don't enforce upper/symbol/digit rules.
         if v.lower() in {"password", "12345678", "qwerty12", "11111111", "00000000"}:
-            raise ValueError("password is too common")
+            raise ValueError("Esta senha é muito comum. Escolha outra.")
         return v
 
     @field_validator("email")
