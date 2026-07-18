@@ -19,7 +19,7 @@ import { levelFromXp } from "@/lib/level";
 
 // 1st / 2nd / 3rd — gold, silver, bronze.
 const MEDAL = {
-  1: { ring: "ring-[#FBBF24]", text: "text-[#FBBF24]", glow: "shadow-[0_0_28px_-4px_rgba(251,191,36,0.6)]", size: 88 },
+  1: { ring: "ring-[#FFC61A]", text: "text-[#FFC61A]", glow: "shadow-[0_0_28px_-4px_rgba(251,191,36,0.6)]", size: 88 },
   2: { ring: "ring-[#CBD5E1]", text: "text-[#CBD5E1]", glow: "shadow-[0_0_22px_-6px_rgba(203,213,225,0.5)]", size: 72 },
   3: { ring: "ring-[#D97706]", text: "text-[#D97706]", glow: "shadow-[0_0_22px_-6px_rgba(217,119,6,0.5)]", size: 72 },
 };
@@ -38,7 +38,7 @@ const PodiumSpot = ({ entry, place }) => {
       <div className="relative">
         {place === 1 && (
           <Crown
-            className="absolute -top-6 left-1/2 -translate-x-1/2 w-7 h-7 text-[#FBBF24]"
+            className="absolute -top-6 left-1/2 -translate-x-1/2 w-7 h-7 text-[#FFC61A]"
             strokeWidth={2.5}
             aria-hidden="true"
           />

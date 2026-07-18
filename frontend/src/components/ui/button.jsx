@@ -21,6 +21,10 @@ const buttonVariants = cva(
         // Accent variant (light blue) — used sparingly for secondary CTAs.
         accent3d:
           "bg-accent text-accent-foreground rounded-xl border-b-4 border-accent/40 shadow-glow hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all",
+        // Brand yellow, same 3D press. The "this is the reward / do this now"
+        // button — one per screen, otherwise the yellow stops meaning anything.
+        yellow3d:
+          "bg-brand-yellow text-[#0d1c3d] rounded-xl border-b-4 border-brand-yellow-dark shadow-glow-yellow hover:brightness-105 active:border-b-0 active:translate-y-1 transition-all",
         destructive:
           "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
         outline:

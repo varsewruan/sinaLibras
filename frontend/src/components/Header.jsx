@@ -9,7 +9,7 @@
 
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Bell, Gem, Hand, Plus, Settings, Star } from "lucide-react";
+import { Bell, Flame, Gem, Hand, Plus, Settings, Star } from "lucide-react";
 import { toast } from "sonner";
 
 import { useAuth } from "@/context/AuthContext";
@@ -58,6 +58,7 @@ export const Header = () => {
   const xp = user?.xp ?? 0;
   const level = levelFromXp(xp);
   const gems = gemsFromXp(xp);
+  const streak = user?.streak?.current ?? 0;
 
   return (
     <header className="sticky top-0 z-30 bg-[#0e1f3d]/95 backdrop-blur border-b border-white/10 shadow-md">
@@ -81,11 +82,16 @@ export const Header = () => {
         </Link>
 
         <div className="flex items-center gap-2 ml-auto">
-          <StatPill icon={Star}     value={xp}   color="#FBBF24" label="XP"    testId="stat-xp" />
+          <StatPill icon={Star}     value={xp}   color="#FFC61A" label="XP"    testId="stat-xp" />
           <StatPill
             icon={Gem} value={gems} color="#38BDF8" label="Gemas" testId="stat-gems"
             trailing={<Plus className="w-3 h-3 text-gem" strokeWidth={3} aria-hidden="true" />}
           />
+          {/* Streak also lives in the desktop sidebar; the mockup puts it in
+              the top bar too, which is the only place mobile users see it. */}
+          <div className="hidden sm:block">
+            <StatPill icon={Flame} value={streak} color="#FB923C" label="Sequência" testId="stat-streak" />
+          </div>
           <IconButton
             icon={Bell}
             label="Notificações"

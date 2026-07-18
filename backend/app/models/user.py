@@ -22,8 +22,13 @@ DEFAULT_AVATAR = "dummy"
 
 AVATAR_IDS: frozenset[str] = frozenset(
     {
-        "dummy", "fox", "cat", "panda", "owl", "frog",
-        "robot", "hero", "star", "alien", "unicorn", "ninja",
+        "dummy",
+        # Cartoon animals (the 2026-07-18 avatar sheet).
+        "bear", "lion", "monkey", "fox", "rabbit",
+        "dog", "cat", "panda", "frog", "tiger",
+        # Original non-animal presets — kept so existing users' saved
+        # avatars stay valid.
+        "owl", "robot", "hero", "star", "alien", "unicorn", "ninja",
     }
 )
 
@@ -92,5 +97,5 @@ class UpdateAvatarRequest(BaseModel):
     @classmethod
     def _known_preset(cls, v: str) -> str:
         if v not in AVATAR_IDS:
-            raise ValueError(f"unknown avatar preset: {v!r}")
+            raise ValueError(f"Avatar desconhecido: {v!r}")
         return v

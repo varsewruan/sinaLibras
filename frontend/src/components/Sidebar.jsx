@@ -17,8 +17,10 @@ export const Sidebar = () => {
     >
       <div className="h-16 flex items-center gap-2 px-6 border-b border-white/10">
         <Hand className="w-6 h-6 text-primary -rotate-12" strokeWidth={2.5} aria-hidden="true" />
-        <span className="text-xl font-black tracking-tight text-white">
-          SINA<span className="text-primary">libras</span>
+        {/* Same two-tone split as <Wordmark/> on the hub, at chrome scale. */}
+        <span className="text-xl font-black tracking-tight">
+          <span className="text-brand-yellow">SINA</span>
+          <span className="text-[#4a97ff]">Libras</span>
         </span>
       </div>
 

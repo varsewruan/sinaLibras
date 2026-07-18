@@ -3,10 +3,14 @@
 @tailwind utilities;
 
 /* -----------------------------------------------------------------------
-   Theme: SINALibras Blue (DARK).
+   Theme: SINALibras Blue + Yellow (DARK).
    Deep navy canvas, near-white text, bright blue as the primary brand +
-   glow, cyan/gold/orange reserved for the gamification currencies.
-   Modeled on the mobile mockup: glowing cards floating on a navy gradient.
+   glow, and a saturated yellow as the SECONDARY brand color — the
+   blue/yellow pairing Gartic uses. Blue carries structure (surfaces,
+   navigation, primary actions); yellow carries reward and attention
+   (XP stars, current step, streaks, the CTA that wants to be pressed).
+
+   Rule of thumb: if it's a surface, it's blue. If it's a prize, it's yellow.
 
    Palette anchors:
      #0a1730 (deepest navy — page bottom)
@@ -14,6 +18,7 @@
      #16294f (card surface)
      #2f7ff0 (primary bright blue + glow)
      #8dcef0 (accent light blue)
+     #ffc61a (secondary brand yellow)
 
    All semantic colors live on :root so shadcn components pick them up via
    the tailwind config (`hsl(var(--background))`, etc.). Flipping these
@@ -35,8 +40,15 @@
     --primary: 214 88% 56%;            /* #2f7ff0 bright blue */
     --primary-foreground: 0 0% 100%;   /* white text on primary buttons */
 
-    --secondary: 218 45% 24%;          /* #21386a muted navy panel */
-    --secondary-foreground: 214 60% 94%;
+    /* Secondary = the brand yellow. Only shadcn's `secondary` variants read
+       these, and the app uses none of them today — so this token is free to
+       carry the real brand meaning instead of being a second navy. */
+    --secondary: 45 100% 55%;          /* #ffc61a brand yellow */
+    --secondary-foreground: 220 60% 12%;  /* navy text on yellow */
+
+    /* The muted navy panel that --secondary used to be, kept under its own
+       name for surfaces that still want it. */
+    --panel: 218 45% 24%;              /* #21386a muted navy panel */
 
     --muted: 219 45% 22%;              /* #1f3560 muted surface */
     --muted-foreground: 214 30% 72%;   /* #a3b6d6 muted slate-blue */
@@ -149,5 +161,25 @@
     background:
       linear-gradient(160deg, rgba(47, 127, 240, 0.16) 0%, rgba(20, 44, 88, 0) 55%),
       hsl(var(--card));
+  }
+
+  /* Yellow twin of .bg-blue-hero — for the one element per screen that
+     should read as the reward/primary action. Used sparingly on purpose:
+     yellow stops meaning "press me" the moment two things wear it. */
+  .bg-yellow-hero {
+    background:
+      radial-gradient(120% 140% at 50% -20%, rgba(255, 214, 77, 0.55) 0%, transparent 60%),
+      linear-gradient(160deg, #ffd54a 0%, #ffc61a 55%, #f0a800 100%);
+    background-color: #ffc61a;
+  }
+
+  /* Dot-grid clusters drifting across the hub background in the mockup.
+     Pure CSS so it costs no asset weight; sits behind content at low alpha. */
+  .bg-dots {
+    background-image: radial-gradient(
+      rgba(141, 206, 240, 0.22) 1.5px,
+      transparent 1.5px
+    );
+    background-size: 22px 22px;
   }
 }

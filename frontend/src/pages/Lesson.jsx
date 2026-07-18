@@ -19,6 +19,8 @@ import { Progress } from "@/components/ui/progress";
 import { useCompleteLesson, useLesson } from "@/lib/hooks/useLearning";
 import { playComplete, playCorrect, playWrong } from "@/lib/audio";
 import { SignMedia } from "@/components/SignMedia";
+import { LessonStars } from "@/components/LessonStars";
+import { starsFor } from "@/lib/stars";
 
 // ---------- helpers ---------------------------------------------------------
 
@@ -51,7 +53,7 @@ const Intro = ({ lesson, onStart }) => (
         <br />
         <span className="text-xs">Dica: use as teclas <Kbd>1</Kbd>–<Kbd>4</Kbd> para responder.</span>
       </p>
-      <Button onClick={onStart} variant="glow3d" size="lg"
+      <Button onClick={onStart} variant="yellow3d" size="lg"
               className="font-bold uppercase tracking-wider px-10"
               data-testid="lesson-start">
         Iniciar lição
@@ -177,6 +179,12 @@ const Result = ({ score, awardedXp, passed, onRetry }) => {
             <p className="mt-2 text-muted-foreground">
               Você acertou <span className="font-bold text-foreground">{score}%</span> dos sinais.
             </p>
+          </div>
+
+          {/* Same star rating the path node will show — earned here, so the
+              user sees what they just unlocked before seeing it on the map. */}
+          <div className="flex justify-center">
+            <LessonStars earned={starsFor({ completed: passed, score })} size={36} />
           </div>
           {awardedXp > 0 && (
             <motion.div

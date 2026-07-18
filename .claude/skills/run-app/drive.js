@@ -22,12 +22,14 @@ const PASSWORD = process.env.SINA_PASSWORD ?? "senha-forte-123456";
 
 const ROUTES = ["/", "/learn", "/lessons", "/ranking", "/achievements", "/profile"];
 
-// Os cards da Home. null = destino dinâmico, só exigimos sair da Home.
+// Os tiles da Home. null = destino dinâmico, só exigimos sair da Home.
+// A Home virou grid de 6 (sem o botão JOGAR); o CTA dinâmico agora é o
+// COMEÇAR da página Aprender, exercitado no fluxo de lição mais abaixo.
 const ENTRY_POINTS = [
+  ["hub-aprender", "/learn"],
   ["hub-ranking", "/ranking"],
   ["hub-objetivos", "/achievements"],
   ["hub-fases", "/lessons"],
-  ["cta-jogar", null],
   ["header-profile", "/profile"],
 ];
 

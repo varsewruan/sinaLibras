@@ -103,18 +103,23 @@ nunca casa. E `a[href="/profile"]` resolve primeiro no BottomNav, que fica
 | testid | onde | leva a |
 |---|---|---|
 | `login-email` / `login-password` / `login-submit` / `login-error` | `pages/Login.jsx` | — |
-| `hub-fases` | card da Home | `/lessons` |
-| `hub-objetivos` | card da Home | `/achievements` |
-| `hub-ranking` | card da Home | `/ranking` |
-| `cta-jogar` | botão da Home | `/lesson/:id` (próxima lição, id dinâmico) |
+| `hub-aprender` | tile da Home | `/learn` |
+| `hub-fases` | tile da Home | `/lessons` |
+| `hub-objetivos` | tile da Home | `/achievements` |
+| `hub-ranking` | tile da Home | `/ranking` |
+| `hub-loja` / `hub-videoaulas` | tiles "Em breve" da Home | nada (só toast) |
+| `cta-comecar` | botão da página Aprender | `/lesson/:id` (próxima lição, id dinâmico) |
 | `header-profile` | avatar do topo | `/profile` |
 
 Todas as rotas exceto `/login` e `/register` são `<Protected>` — logue antes.
 
 No **desktop a sidebar só tem Início + Aprender**, de propósito
 (`lib/nav-items.js`). Ranking / Conquistas / Perfil só são alcançáveis pelos
-cards da Home e pelo avatar, o que torna esses cliques o único caminho vivo —
+tiles da Home e pelo avatar, o que torna esses cliques o único caminho vivo —
 vale testá-los sempre.
+
+A Home é um **grid de 6 tiles, sem botão JOGAR** (mockup de 2026-07-18). O CTA
+que retoma a próxima lição é o `cta-comecar`, na página Aprender.
 
 ## 5. Testes
 
@@ -138,7 +143,10 @@ mas aparece no ranking com 0 XP e desempata na última posição.
 
 - `avatar: "dummy"` num usuário novo é o default documentado. `AVATAR_IDS`
   (`app/models/user.py`) e `AVATARS` (`frontend/src/lib/avatars.js`) têm os
-  mesmos 12 ids.
+  mesmos 18 ids (10 animais + `dummy` + 7 presets antigos).
+- Nó do caminho sem fileira de estrelas não é bug: só lição **concluída**
+  desenha estrelas. A nota vem de `LessonSummary.score` (melhor nota já
+  tirada) — ver `frontend/src/lib/stars.js`.
 - Empatados em XP dividem o mesmo rank (1, 2, 2, 4). É "competition ranking",
   exigido por `test_own_rank_does_not_depend_on_limit`. Cinco usuários com
   0 XP aparecendo todos como rank 15 está **certo**.

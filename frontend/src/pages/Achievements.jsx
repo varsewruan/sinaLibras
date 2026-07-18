@@ -23,7 +23,7 @@ const ICONS = { Sparkles, Star, Trophy, Crown, Flame, BookCheck, GraduationCap }
 
 // Tint per metric — XP gold, streak orange, lessons green.
 const TINT = {
-  xp: "#FBBF24",
+  xp: "#FFC61A",
   streak: "#FB923C",
   lessons: "#34D399",
 };

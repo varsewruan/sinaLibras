@@ -150,7 +150,7 @@ export default function Profile() {
             </>
           ) : (
             <>
-              <StatCard icon={Star}       color="#FBBF24" label="XP total"          value={xp} />
+              <StatCard icon={Star}       color="#FFC61A" label="XP total"          value={xp} />
               <StatCard icon={Flame}      color="#FB923C" label="Sequência atual"   value={user.streak?.current ?? 0} />
               <StatCard icon={Trophy}     color="#38BDF8" label="Maior sequência"   value={user.streak?.longest ?? 0} />
               <StatCard icon={BookCheck}  color="#34D399" label="Lições concluídas" value={summary?.lessons_completed ?? 0} />

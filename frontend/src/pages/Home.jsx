@@ -1,63 +1,51 @@
 /**
  * Home — the game hub from the mockup.
  *
- * One glowing panel: a big JOGAR button that resumes the first unfinished
- * lesson, plus the three entry points (Fases / Objetivos / Ranking).
+ * The wordmark over a 6-up grid of entry points. Four are live; Loja and
+ * Vídeo Aulas have no backend yet and render as "Em breve" tiles.
+ *
+ * There is deliberately no JOGAR button here: the mockup's hub is the grid,
+ * and "resume the next lesson" already lives on Aprender as COMEÇAR. Tile
+ * tones follow the theme rule — structure is blue, rewards are yellow.
  */
 
-import { MapPin, Target, Trophy } from "lucide-react";
+import { BookOpen, MapPin, PlayCircle, ShoppingCart, Target, Trophy } from "lucide-react";
 import { motion } from "framer-motion";
 
 import { AppShell } from "@/components/AppShell";
-import { BigCTA } from "@/components/BigCTA";
 import { DecorHands } from "@/components/DecorHands";
-import { FeatureCard } from "@/components/FeatureCard";
-import { Skeleton } from "@/components/ui/skeleton";
-import { usePhases } from "@/lib/hooks/useLearning";
-import { findNextLesson } from "@/lib/next-lesson";
+import { HubTile } from "@/components/HubTile";
+import { Wordmark } from "@/components/Wordmark";
 
 const HUB = [
-  {
-    icon: MapPin, iconColor: "#FBBF24", to: "/lessons", testId: "hub-fases",
-    title: "Fases", description: "Escolha sua próxima missão e avance!",
-  },
-  {
-    icon: Target, iconColor: "#38BDF8", to: "/achievements", testId: "hub-objetivos",
-    title: "Objetivos", description: "Complete conquistas e ganhe recompensas!",
-  },
-  {
-    icon: Trophy, iconColor: "#FBBF24", to: "/ranking", testId: "hub-ranking",
-    title: "Ranking", description: "Veja sua posição no ranking e compita!",
-  },
+  { icon: BookOpen,    tone: "blue",   to: "/learn",        testId: "hub-aprender",  title: "Aprender" },
+  { icon: MapPin,      tone: "blue",   to: "/lessons",      testId: "hub-fases",     title: "Fases" },
+  { icon: Target,      tone: "yellow", to: "/achievements", testId: "hub-objetivos", title: "Objetivos" },
+  { icon: Trophy,      tone: "yellow", to: "/ranking",      testId: "hub-ranking",   title: "Ranking" },
+  { icon: ShoppingCart,tone: "yellow", soon: true,          testId: "hub-loja",      title: "Loja" },
+  { icon: PlayCircle,  tone: "blue",   soon: true,          testId: "hub-videoaulas",title: "Vídeo Aulas" },
 ];
 
 export default function Home() {
-  const { data: phases, isLoading } = usePhases();
-  const next = phases ? findNextLesson(phases) : null;
-
-  // Everything done (or catalog empty) → send the CTA to the path overview.
-  const ctaTo = next ? `/lesson/${next.lesson.id}` : "/lessons";
-
   return (
     <AppShell title="Início">
       <motion.section
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="relative overflow-hidden rounded-3xl bg-card-glow ring-1 ring-white/10 px-6 py-10 sm:px-10 sm:py-14"
+        className="relative overflow-hidden rounded-3xl bg-card-glow px-6 py-10 ring-1 ring-white/10 sm:px-10 sm:py-14"
       >
+        {/* Two ornamental layers from the mockup: the dot grid and the drifting
+            hand outlines. Both are aria-hidden. */}
+        <div className="pointer-events-none absolute inset-0 bg-dots opacity-40" aria-hidden="true" />
         <DecorHands />
 
         <div className="relative flex flex-col items-center gap-10">
-          {isLoading ? (
-            <Skeleton className="h-[76px] w-[280px] rounded-full" />
-          ) : (
-            <BigCTA to={ctaTo} label="JOGAR" testId="cta-jogar" />
-          )}
+          <Wordmark className="text-5xl sm:text-7xl" />
 
-          <div className="grid w-full max-w-3xl grid-cols-1 gap-4 sm:grid-cols-3">
-            {HUB.map((card) => (
-              <FeatureCard key={card.title} {...card} />
+          <div className="grid w-full max-w-3xl grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5">
+            {HUB.map((tile) => (
+              <HubTile key={tile.title} {...tile} />
             ))}
           </div>
         </div>

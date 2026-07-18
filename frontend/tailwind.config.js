@@ -43,6 +43,7 @@ module.exports = {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
+        panel: "hsl(var(--panel))",
 
         // SINALibras-specific gamification palette (literal values, not vars,
         // because they don't switch with theme). Tuned for the Blue DARK
@@ -52,9 +53,17 @@ module.exports = {
           DEFAULT: "#2f7ff0",
           soft: "rgba(47, 127, 240, 0.45)",
         },
+        // The brand yellow, as a small scale. `brand.yellow` is the same hue
+        // as --secondary; the light/dark stops build the 3D button faces and
+        // gradients without hardcoding hex in a dozen components.
+        brand: {
+          yellow: "#FFC61A",
+          "yellow-light": "#FFD966",
+          "yellow-dark": "#C98A00",
+        },
         success: "#34D399",   // emerald reads bright on navy
-        coin: "#FBBF24",      // gold coin
-        star: "#FBBF24",      // gold star (XP badge in the top bar)
+        coin: "#FFC61A",      // gold coin — unified with the brand yellow
+        star: "#FFC61A",      // gold star (XP badge in the top bar)
         gem: "#38BDF8",       // cyan gem (gems currency)
         xp: "#A78BFA",        // lively violet for XP accents
         streak: "#FB923C",    // warm orange — fire icon
@@ -76,6 +85,10 @@ module.exports = {
         "glow-lg": "0 0 0 1px rgba(47,127,240,0.28), 0 14px 40px -6px rgba(47, 127, 240, 0.60), 0 6px 16px -4px rgba(0, 0, 0, 0.50)",
         // Warm-orange-tinted lift for streak/fire accents (kept semantic).
         "glow-orange": "0 8px 28px -6px rgba(251, 146, 60, 0.50), 0 4px 12px -4px rgba(0, 0, 0, 0.45)",
+        // Yellow halo — the secondary brand glow. Mirrors shadow-glow so a
+        // component can swap blue→yellow without relayout.
+        "glow-yellow": "0 0 0 1px rgba(255,198,26,0.25), 0 8px 28px -6px rgba(255, 198, 26, 0.50), 0 4px 12px -4px rgba(0, 0, 0, 0.45)",
+        "glow-yellow-lg": "0 0 0 1px rgba(255,198,26,0.35), 0 14px 40px -6px rgba(255, 198, 26, 0.65), 0 6px 16px -4px rgba(0, 0, 0, 0.50)",
       },
       keyframes: {
         "accordion-down": {

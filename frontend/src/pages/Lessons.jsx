@@ -6,16 +6,24 @@
  * and everything after is `locked`. Because that ordering spans phases, the
  * state is computed over a flattened list rather than per-phase.
  *
+ * The dashed trail between nodes is drawn by <PathConnector/>, which takes
+ * the same OFFSETS this file applies to the nodes — that shared table is
+ * what keeps the curve's endpoints exactly on the discs without measuring
+ * the DOM. Connectors are drawn *within* a phase only; the phase banner is
+ * the intentional break in the trail.
+ *
  * Note: locking is a UI affordance. /lesson/:id stays directly reachable —
  * lesson content is public, so there's nothing to guard server-side.
  */
 
-import { useMemo } from "react";
+import { Fragment, useMemo } from "react";
 import { motion } from "framer-motion";
 import { PartyPopper } from "lucide-react";
 
 import { AppShell } from "@/components/AppShell";
 import { LessonNode } from "@/components/LessonNode";
+import { PathConnector } from "@/components/PathConnector";
+import { PathMarker } from "@/components/PathMarker";
 import { PathSkeleton } from "@/components/PathSkeleton";
 import { PhaseBanner } from "@/components/PhaseBanner";
 import { usePhases } from "@/lib/hooks/useLearning";
@@ -23,6 +31,8 @@ import { usePhases } from "@/lib/hooks/useLearning";
 // Serpentine: horizontal offset (px) applied to each node, cycling down the
 // trail so the path snakes instead of running straight.
 const OFFSETS = [0, 56, 84, 56, 0, -56, -84, -56];
+
+const offsetAt = (i) => OFFSETS[i % OFFSETS.length];
 
 /**
  * Flatten the phases once: each lesson's position in the global order, the
@@ -80,6 +90,12 @@ export default function Lessons() {
         <div className="mx-auto max-w-lg space-y-10 pb-8">
           {allDone && <AllDone />}
 
+          {total > 0 && (
+            <div className="flex justify-center">
+              <PathMarker variant="start" label="Início" />
+            </div>
+          )}
+
           {phases.map((phase, pi) => {
             const phaseDone = phase.lessons.length > 0 && phase.lessons.every((l) => l.completed);
             return (
@@ -95,22 +111,37 @@ export default function Lessons() {
                   <PhaseBanner phase={phase} done={phaseDone} />
                 </div>
 
-                {/* gap must clear the CONTINUAR bubble (48px above its node),
-                    otherwise it lands on the previous lesson's label. */}
-                <div className="flex flex-col items-center gap-16">
+                {/* Tight gap on purpose: the 72px connector supplies the
+                    vertical rhythm between nodes (and the clearance the
+                    CONTINUAR bubble needs). A large gap here would leave the
+                    dashes floating short of both discs. */}
+                <div className="flex flex-col items-center gap-3">
                   {phase.lessons.map((lesson, li) => (
-                    <LessonNode
-                      key={lesson.id}
-                      lesson={lesson}
-                      state={stateFor(indexById.get(lesson.id), nextIndex)}
-                      isPhaseEnd={li === phase.lessons.length - 1}
-                      offset={OFFSETS[li % OFFSETS.length]}
-                    />
+                    <Fragment key={lesson.id}>
+                      {li > 0 && (
+                        <PathConnector fromOffset={offsetAt(li - 1)} toOffset={offsetAt(li)} />
+                      )}
+                      <LessonNode
+                        lesson={lesson}
+                        state={stateFor(indexById.get(lesson.id), nextIndex)}
+                        // 1-based position in the whole path, matching the
+                        // numbered nodes in the design.
+                        number={indexById.get(lesson.id) + 1}
+                        isPhaseEnd={li === phase.lessons.length - 1}
+                        offset={offsetAt(li)}
+                      />
+                    </Fragment>
                   ))}
                 </div>
               </motion.section>
             );
           })}
+
+          {total > 0 && (
+            <div className="flex justify-center">
+              <PathMarker variant="finish" label="Final" />
+            </div>
+          )}
         </div>
       )}
     </AppShell>
