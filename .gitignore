@@ -30,6 +30,11 @@ next-env.d.ts
 dist/
 dist
 
+# Empacotamento desktop: cache de análise do PyInstaller e o venv usado só
+# para gerar o .exe. A saída (desktop/dist/) já cai no `dist` acima.
+desktop/build/
+.venv-desktop/
+
 # Environment files (comprehensive coverage)
 .env
 .env.*
