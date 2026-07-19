@@ -9,7 +9,10 @@ docker-compose faz, sem Docker:
   2. semeia o catálogo (idempotente, então roda a cada boot sem estragar nada);
   3. sobe o FastAPI servindo API + SPA na MESMA origem (o modo single-host que
      `app.main` já suportava via FRONTEND_BUILD_DIR — nada de novo no backend);
-  4. abre uma janela nativa (WebView2) apontando pra esse servidor local.
+  4. abre uma janela própria (Chromium em modo --app) apontando pra ele.
+
+Chegou a usar uma janela nativa (pywebview/WebView2), removida por crashar
+duro — o porquê está em `open_app_window`.
 
 Consequência que vale ter em mente: o banco é local e isolado. Cada pessoa que
 instalar tem o próprio ranking, o próprio streak e as próprias conquistas —
@@ -30,6 +33,7 @@ import sys
 import threading
 import time
 from pathlib import Path
+from typing import Optional
 
 APP_NAME = "SINALibras"
 
@@ -70,6 +74,9 @@ def log_path() -> Path:
     return data_dir() / "sinalibras.log"
 
 
+_streams_redirected = False
+
+
 def redirect_streams() -> None:
     """Aponta stdout/stderr pro arquivo de log quando eles não existem.
 
@@ -80,6 +87,7 @@ def redirect_streams() -> None:
     chega a subir. Redirecionar cedo conserta isso e ainda faz o log do
     backend aterrissar num arquivo que dá pra ler depois.
     """
+    global _streams_redirected
     if sys.stdout is not None and sys.stderr is not None:
         return
     try:
@@ -90,10 +98,19 @@ def redirect_streams() -> None:
         sys.stdout = stream
     if sys.stderr is None:
         sys.stderr = stream
+    _streams_redirected = True
 
 
 def log(message: str) -> None:
     line = f"[{time.strftime('%H:%M:%S')}] {message}"
+    # Quando stdout JÁ é o arquivo de log, imprimir e escrever gravaria a
+    # mesma linha duas vezes.
+    if _streams_redirected:
+        try:
+            print(line, flush=True)
+        except (OSError, ValueError):
+            pass
+        return
     try:
         if sys.stdout is not None:
             print(line, flush=True)
@@ -131,6 +148,51 @@ def jwt_secret() -> str:
 # Mongo
 # --------------------------------------------------------------------------
 
+def _no_window() -> int:
+    return getattr(subprocess, "CREATE_NO_WINDOW", 0)
+
+
+def kill_orphan_mongod() -> None:
+    """Mata um mongod nosso que tenha sobrado de uma execução anterior.
+
+    Se o app morre de um jeito que pula o `finally` (crash do backend gráfico,
+    fim de processo pelo gerenciador de tarefas), o mongod continua vivo
+    segurando o dbpath. Na abertura seguinte o novo mongod sai com código 100
+    (DBPathInUse) e o app **nunca mais abre** — pra quem só clicou no ícone,
+    vira "parou de funcionar" pra sempre.
+
+    Guardamos o PID num arquivo e só matamos se o processo daquele PID ainda
+    for um mongod: PID é reciclado pelo SO, e matar às cegas poderia derrubar
+    um processo alheio.
+    """
+    pidfile = data_dir() / "mongod.pid"
+    if not pidfile.is_file():
+        return
+    try:
+        pid = int(pidfile.read_text(encoding="utf-8").strip())
+    except (OSError, ValueError):
+        pidfile.unlink(missing_ok=True)
+        return
+
+    try:
+        listing = subprocess.run(
+            ["tasklist", "/FI", f"PID eq {pid}", "/NH", "/FO", "CSV"],
+            capture_output=True, text=True, creationflags=_no_window(), timeout=15,
+        ).stdout.lower()
+        if "mongod.exe" in listing:
+            log(f"encontrado mongod órfão (pid {pid}); encerrando")
+            subprocess.run(
+                ["taskkill", "/PID", str(pid), "/F"],
+                capture_output=True, creationflags=_no_window(), timeout=15,
+            )
+            # Dá um instante pro Windows liberar o lock do dbpath.
+            time.sleep(1.5)
+    except (OSError, subprocess.SubprocessError) as exc:
+        log(f"não deu pra checar o mongod órfão ({exc}); seguindo")
+    finally:
+        pidfile.unlink(missing_ok=True)
+
+
 def start_mongod(port: int) -> subprocess.Popen:
     exe = bundle_dir() / "mongodb" / "mongod.exe"
     if not exe.is_file():
@@ -153,14 +215,20 @@ def start_mongod(port: int) -> subprocess.Popen:
 
     # CREATE_NO_WINDOW: sem isso um console preto do mongod pisca junto com o
     # app, o que parece defeito pra quem só clicou no ícone.
-    creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
     log(f"iniciando mongod na porta {port}")
-    return subprocess.Popen(
+    process = subprocess.Popen(
         args,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
-        creationflags=creationflags,
+        creationflags=_no_window(),
     )
+    # Registra o PID pra que a próxima abertura saiba matá-lo se este processo
+    # morrer sem passar pelo `finally` (ver kill_orphan_mongod).
+    try:
+        (data_dir() / "mongod.pid").write_text(str(process.pid), encoding="utf-8")
+    except OSError:
+        pass
+    return process
 
 
 def wait_for_mongo(port: int, process: subprocess.Popen, timeout: float = 60.0) -> None:
@@ -215,13 +283,25 @@ def seed_catalog() -> None:
 
     Sem isso o app abre vazio: o catálogo não vive no código, vive no banco —
     e o banco nasce vazio na máquina de quem instalou.
+
+    O `close_mongo_connection()` no fim NÃO é higiene opcional. `app.db.mongo`
+    guarda o client num global e `connect_to_mongo` devolve o existente sem
+    reconectar. Como `asyncio.run` fecha o loop que criou, o client ficaria
+    amarrado a um loop morto — e o lifespan do uvicorn, rodando no loop dele,
+    quebrava em `ensure_indexes` com "Event loop is closed" e o servidor nem
+    subia. Fechando aqui, o lifespan reconecta no loop certo.
     """
     import asyncio
 
+    from app.db.mongo import close_mongo_connection
     from scripts.seed import run as seed_run
 
+    async def _seed_then_release() -> None:
+        await seed_run(reset=False)
+        await close_mongo_connection()
+
     log("semeando catálogo")
-    asyncio.run(seed_run(reset=False))
+    asyncio.run(_seed_then_release())
     log("catálogo pronto")
 
 
@@ -262,6 +342,7 @@ def main() -> int:
     mongo = None
     redirect_streams()
     try:
+        kill_orphan_mongod()
         mongo_port = free_port()
         mongo = start_mongod(mongo_port)
         wait_for_mongo(mongo_port, mongo)
@@ -273,18 +354,7 @@ def main() -> int:
         start_api(api_port)
         wait_for_api(api_port)
 
-        import webview
-
-        log(f"abrindo janela em http://127.0.0.1:{api_port}")
-        webview.create_window(
-            APP_NAME,
-            f"http://127.0.0.1:{api_port}",
-            width=1280,
-            height=860,
-            min_size=(900, 640),
-        )
-        # Bloqueia até a janela fechar. Precisa ser a thread principal.
-        webview.start()
+        open_app_window(f"http://127.0.0.1:{api_port}")
         return 0
 
     except Exception as exc:  # noqa: BLE001 — última linha de defesa da GUI
@@ -301,6 +371,87 @@ def main() -> int:
             except subprocess.TimeoutExpired:
                 # Um mongod pendurado tranca o dbpath e impede o próximo boot.
                 mongo.kill()
+        try:
+            (data_dir() / "mongod.pid").unlink(missing_ok=True)
+        except OSError:
+            pass
+
+
+# Navegadores baseados em Chromium, em ordem de preferência. Edge vem primeiro
+# por estar sempre presente no Windows 10/11.
+_BROWSERS = [
+    r"%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge.exe",
+    r"%ProgramFiles%\Microsoft\Edge\Application\msedge.exe",
+    r"%ProgramFiles%\Google\Chrome\Application\chrome.exe",
+    r"%ProgramFiles(x86)%\Google\Chrome\Application\chrome.exe",
+    r"%LocalAppData%\Google\Chrome\Application\chrome.exe",
+]
+
+
+def _find_chromium() -> Optional[Path]:
+    for raw in _BROWSERS:
+        candidate = Path(os.path.expandvars(raw))
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+def open_app_window(url: str) -> None:
+    """Abre o app numa janela própria e espera ela fechar.
+
+    ## Por que assim
+
+    O modo `--app` do Chromium abre uma janela SEM barra de endereço, sem
+    abas, com entrada própria na barra de tarefas e ícone do site. Visualmente
+    é um aplicativo — é o mesmo truque que os "apps instalados" do Chrome/Edge
+    usam. E não custa nada em tamanho: o motor já está na máquina.
+
+    O `--user-data-dir` dedicado é o que faz isso funcionar de verdade:
+
+      1. força um processo NOVO do navegador em vez de reaproveitar uma janela
+         já aberta — sem isso o `wait()` voltaria na hora e o app se
+         encerraria com a janela ainda na tela;
+      2. isola a sessão: o cookie de login do app não se mistura com a
+         navegação pessoal de quem usa.
+
+    Tentei antes uma janela nativa com pywebview/WebView2. Ela **crasha duro**
+    (0xC0000409 dentro de `webview.start()`, no 3.13 e no 3.14), e crash
+    nativo não vira exceção Python — o processo sumia sem log, deixando o
+    mongod órfão. Como não consigo verificar que funciona, não vai junto.
+    """
+    exe = _find_chromium()
+    profile = data_dir() / "janela"
+    profile.mkdir(parents=True, exist_ok=True)
+
+    if exe is None:
+        # Nenhum Chromium: cai pro navegador padrão. Vira uma aba comum, mas
+        # é melhor do que não abrir nada.
+        import webbrowser
+
+        log("nenhum Chromium encontrado; abrindo no navegador padrão")
+        webbrowser.open(url)
+        log("mantendo o app no ar (feche pelo gerenciador de tarefas)")
+        while True:
+            time.sleep(3600)
+
+    log(f"abrindo janela do app com {exe.name}")
+    window = subprocess.Popen(
+        [
+            str(exe),
+            f"--app={url}",
+            f"--user-data-dir={profile}",
+            "--window-size=1280,900",
+            "--no-first-run",
+            "--no-default-browser-check",
+            # Sem isso o Edge pode abrir a aba de boas-vindas por cima do app.
+            "--disable-features=msEdgeWelcomePage,Translate",
+        ],
+        creationflags=_no_window(),
+    )
+    # Bloqueia até a pessoa fechar a janela; aí o main() cai no `finally` e
+    # derruba o mongod junto.
+    window.wait()
+    log("janela fechada")
 
 
 def _show_error(message: str) -> None:

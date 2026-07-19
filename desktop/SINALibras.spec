@@ -53,7 +53,10 @@ a = Analysis(                                    # noqa: F821
     hookspath=[],
     runtime_hooks=[],
     # Pesos mortos que entrariam de carona pelas dependências de teste.
-    excludes=["tkinter", "pytest", "httpx", "matplotlib", "numpy"],
+    # `webview`/`clr` saem porque a janela nativa foi abandonada (crash duro,
+    # ver launcher._open_in_browser); sem excluir, o PyInstaller ainda os
+    # empacotaria por estarem instalados no venv.
+    excludes=["tkinter", "pytest", "httpx", "matplotlib", "numpy", "webview", "clr"],
     noarchive=False,
 )
 
@@ -71,6 +74,8 @@ exe = EXE(                                       # noqa: F821
     # Sem console: é um app de janela. Erros de boot viram MessageBox e log
     # (ver _show_error no launcher), senão a falha fica invisível.
     console=False,
+    # Ícone do .exe no Explorer e na barra de tarefas (gerado por make_icon.py).
+    icon=str(Path(SPECPATH) / "icon.ico"),  # noqa: F821
 )
 
 coll = COLLECT(                                  # noqa: F821
