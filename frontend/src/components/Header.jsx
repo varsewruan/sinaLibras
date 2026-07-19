@@ -15,6 +15,7 @@ import { toast } from "sonner";
 
 import { useAuth } from "@/context/AuthContext";
 import { UserAvatar } from "@/components/UserAvatar";
+import { Wordmark } from "@/components/Wordmark";
 import { gemsFromXp, levelFromXp } from "@/lib/level";
 
 const RollingNumber = ({ value }) => (
@@ -63,20 +64,28 @@ export const Header = () => {
 
   return (
     <header className="sticky top-0 z-30 bg-[#0e1f3d]/95 backdrop-blur border-b border-white/10 shadow-md">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
-        {/* Visible at every breakpoint: with the sidebar gone this is the only
-            way back to the hub on desktop. Hiding it strands the user on
-            whatever page they clicked into. */}
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
+        {/* Home link, compact form. Below lg the centered wordmark would
+            collide with the stat pills, so the hand icon stands in — with the
+            sidebar gone, losing the home link entirely would strand the user
+            on whatever page they clicked into. */}
         <Link
           to="/"
-          className="flex items-center gap-2 shrink-0 mr-2 border-r border-white/10 pr-4 sm:mr-4"
+          className="lg:hidden flex items-center shrink-0 mr-1"
           aria-label="Início"
         >
           <Hand className="w-6 h-6 text-primary -rotate-12 shrink-0" strokeWidth={2.5} aria-hidden="true" />
-          <span className="hidden md:inline text-lg font-black tracking-tight leading-none">
-            <span className="text-brand-yellow">SINA</span>
-            <span className="text-[#4a97ff]">Libras</span>
-          </span>
+        </Link>
+
+        {/* Home link, centered form (lg+). Absolute so it centers against the
+            header itself rather than against whatever the flex row leaves
+            over — the left and right clusters have very different widths. */}
+        <Link
+          to="/"
+          aria-label="Início"
+          className="hidden lg:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+        >
+          <Wordmark as="span" className="text-xl transition-opacity hover:opacity-80" />
         </Link>
 
         {/* Identity — links to profile */}
@@ -85,7 +94,7 @@ export const Header = () => {
           className="flex items-center gap-3 min-w-0 rounded-full pr-3 hover:bg-white/5 transition-colors"
           data-testid="header-profile"
         >
-          <UserAvatar avatar={user?.avatar} size={40} ring />
+          <UserAvatar avatar={user?.avatar} accessory={user?.accessory} size={40} ring />
           <div className="hidden sm:block leading-tight min-w-0">
             <p className="font-black text-white truncate max-w-[10rem]">{user?.name ?? "—"}</p>
             <p className="text-xs font-bold text-white/50">Nível {String(level).padStart(2, "0")}</p>

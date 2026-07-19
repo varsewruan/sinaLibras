@@ -1,32 +1,18 @@
 /**
- * The SINALibras wordmark from the hub mockup.
+ * O nome do app, centralizado e numa cor só (azul da marca).
  *
- * Two-tone on purpose: "SINA" in the brand yellow, "Libras" in the brand
- * blue. The mockup renders it all-blue, but the blue/yellow split is what
- * makes the pairing read as a brand rather than as a blue app with yellow
- * highlights — it's the same move Gartic makes with its logo.
+ * Já foi bicolor (SINA amarelo + Libras azul); virou cor única em 2026-07-18.
+ * O amarelo continua sendo a cor secundária da marca — só não é mais gasto no
+ * logotipo, que fica como âncora neutra enquanto o amarelo marca o que dá
+ * pra apertar.
  *
- * Decorative: the accessible name is carried by the <h1>, and the halves are
- * hidden from assistive tech so a screen reader doesn't hear "SINA Libras"
- * as two words.
+ * Renderiza um <h1> por padrão. Onde já existe um h1 na página (ou onde é só
+ * chrome, como no topo), passe `as="span"` — dois h1 na mesma tela confundem
+ * a navegação por cabeçalhos de leitor de tela.
  */
 
-export const Wordmark = ({ className = "" }) => (
-  <h1
-    className={`text-center font-black leading-none tracking-tight ${className}`}
-    aria-label="SINALibras"
-  >
-    <span
-      aria-hidden="true"
-      className="text-brand-yellow [text-shadow:0_0_28px_rgba(255,198,26,0.45)]"
-    >
-      SINA
-    </span>
-    <span
-      aria-hidden="true"
-      className="text-[#4a97ff] [text-shadow:0_0_28px_rgba(47,127,240,0.55)]"
-    >
-      Libras
-    </span>
-  </h1>
+export const Wordmark = ({ className = "", as: Tag = "h1" }) => (
+  <Tag className={`block text-center font-black leading-none tracking-tight text-[#4a97ff] ${className}`}>
+    SINALibras
+  </Tag>
 );

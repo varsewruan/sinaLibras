@@ -1,5 +1,6 @@
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { BookCheck, Flame, LogOut, Star, Trophy } from "lucide-react";
+import { BookCheck, Flame, LogOut, ShoppingCart, Star, Trophy } from "lucide-react";
 import clsx from "clsx";
 import { toast } from "sonner";
 
@@ -10,8 +11,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/context/AuthContext";
 import { useSummary } from "@/lib/hooks/useLearning";
+import { useShop } from "@/lib/hooks/useShop";
 import { useUpdateAvatar } from "@/lib/hooks/useProfile";
-import { AVATARS, DEFAULT_AVATAR } from "@/lib/avatars";
+import { DEFAULT_AVATAR } from "@/lib/avatars";
 import { levelFromXp, levelProgress } from "@/lib/level";
 
 const StatCard = ({ icon: Icon, color, label, value }) => (
@@ -43,8 +45,17 @@ const StatCardSkeleton = () => (
   </Card>
 );
 
+/**
+ * Só mostra os avatares que a pessoa realmente tem.
+ *
+ * Antes listava o catálogo inteiro, o que virou armadilha quando avatares
+ * passaram a ser comprados: o backend recusa equipar um avatar não comprado
+ * (403), então metade dos botões daria erro. Quem decide o que aparece é o
+ * `owned` que a loja devolve — a mesma fonte que o backend usa pra validar.
+ */
 const AvatarPicker = ({ current }) => {
   const { mutate, isPending, variables } = useUpdateAvatar();
+  const { data: shop, isLoading } = useShop();
 
   const choose = (id) => {
     if (id === current || isPending) return;
@@ -54,40 +65,65 @@ const AvatarPicker = ({ current }) => {
     });
   };
 
+  const owned = (shop?.items ?? []).filter((i) => i.kind === "avatar" && i.owned);
+  const lockedCount = (shop?.items ?? []).filter((i) => i.kind === "avatar" && !i.owned).length;
+
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between gap-3">
         <CardTitle className="text-lg">Escolha seu avatar</CardTitle>
+        <Button asChild variant="outline" size="sm">
+          <Link to="/shop" data-testid="profile-to-shop">
+            <ShoppingCart className="mr-1.5 h-4 w-4" />
+            Loja
+          </Link>
+        </Button>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
-          {AVATARS.map((a) => {
-            const selected = a.id === current;
-            const pending = isPending && variables === a.id;
-            return (
-              <button
-                key={a.id}
-                type="button"
-                onClick={() => choose(a.id)}
-                disabled={isPending}
-                aria-pressed={selected}
-                aria-label={a.label}
-                data-testid={`avatar-${a.id}`}
-                className={clsx(
-                  "flex flex-col items-center gap-1.5 rounded-2xl p-2 transition-all",
-                  "hover:bg-white/5 disabled:cursor-not-allowed",
-                  selected && "bg-primary/15 ring-2 ring-primary",
-                  pending && "animate-pulse"
-                )}
-              >
-                <UserAvatar avatar={a.id} size={48} />
-                <span className="text-[10px] font-bold text-muted-foreground truncate max-w-full">
-                  {a.label}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+        {isLoading ? (
+          <Skeleton className="h-20 w-full rounded-2xl" />
+        ) : (
+          <>
+            <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
+              {owned.map((a) => {
+                const selected = a.id === current;
+                const pending = isPending && variables === a.id;
+                return (
+                  <button
+                    key={a.id}
+                    type="button"
+                    onClick={() => choose(a.id)}
+                    disabled={isPending}
+                    aria-pressed={selected}
+                    aria-label={a.label}
+                    data-testid={`avatar-${a.id}`}
+                    className={clsx(
+                      "flex flex-col items-center gap-1.5 rounded-2xl p-2 transition-all",
+                      "hover:bg-white/5 disabled:cursor-not-allowed",
+                      selected && "bg-primary/15 ring-2 ring-primary",
+                      pending && "animate-pulse"
+                    )}
+                  >
+                    <UserAvatar avatar={a.id} size={48} />
+                    <span className="text-[10px] font-bold text-muted-foreground truncate max-w-full">
+                      {a.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {lockedCount > 0 && (
+              <p className="mt-4 text-xs text-muted-foreground">
+                Mais {lockedCount} avatares esperando na{" "}
+                <Link to="/shop" className="font-bold text-primary hover:underline">
+                  loja
+                </Link>
+                .
+              </p>
+            )}
+          </>
+        )}
       </CardContent>
     </Card>
   );
@@ -111,7 +147,12 @@ export default function Profile() {
       >
         <Card>
           <CardHeader className="flex flex-row items-center gap-5">
-            <UserAvatar avatar={user.avatar ?? DEFAULT_AVATAR} size={80} ring />
+            <UserAvatar
+              avatar={user.avatar ?? DEFAULT_AVATAR}
+              accessory={user.accessory}
+              size={80}
+              ring
+            />
             <div className="min-w-0 flex-1">
               <CardTitle className="text-2xl truncate">{user.name}</CardTitle>
               <p className="text-sm text-muted-foreground truncate">{user.email}</p>

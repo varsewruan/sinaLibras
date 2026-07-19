@@ -58,6 +58,14 @@ class User(TimestampedModel):
     xp: int = Field(default=0, ge=0)
     streak: StreakState = Field(default_factory=StreakState)
 
+    # Loja. `xp` é o total ganho na vida e NUNCA diminui — é dele que saem
+    # ranking, nível e conquistas. Comprar incrementa `xp_spent`; o saldo
+    # gastável é xp - xp_spent. Ver app/models/shop.py para o porquê.
+    xp_spent: int = Field(default=0, ge=0)
+    owned_items: list[str] = Field(default_factory=list)
+    # Acessório equipado (só um por vez). None = nenhum.
+    accessory: Optional[str] = Field(default=None, max_length=64)
+
     # Bumped on logout or password change. The JWT carries the version it was
     # issued under; if the user's current version is higher, the token is
     # rejected. Cheap stateless revocation, no denylist needed.
@@ -74,6 +82,12 @@ class UserPublic(BaseModel):
     xp: int
     streak: StreakState
     created_at: datetime
+    # Loja. `xp` acima segue sendo o total (ranking/nível); `xp_balance` é o
+    # que ainda dá pra gastar. Servir os dois evita o cliente ter que
+    # recalcular a regra — e errar.
+    xp_spent: int = 0
+    xp_balance: int = 0
+    accessory: Optional[str] = None
 
     @classmethod
     def from_user(cls, user: User) -> "UserPublic":
@@ -85,6 +99,9 @@ class UserPublic(BaseModel):
             xp=user.xp,
             streak=user.streak,
             created_at=user.created_at,
+            xp_spent=user.xp_spent,
+            xp_balance=max(0, user.xp - user.xp_spent),
+            accessory=user.accessory,
         )
 
 

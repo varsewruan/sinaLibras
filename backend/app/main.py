@@ -27,7 +27,7 @@ from app.core.errors import validation_exception_handler
 from app.core.logging import get_logger, setup_logging
 from app.core.rate_limit import limiter
 from app.db.mongo import close_mongo_connection, connect_to_mongo, ensure_indexes
-from app.routers import achievements, auth, health, learning, progress, ranking, users
+from app.routers import achievements, auth, health, learning, progress, ranking, shop, users
 
 logger = get_logger(__name__)
 
@@ -96,6 +96,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     api.include_router(progress.router)
     api.include_router(ranking.router)
     api.include_router(achievements.router)
+    api.include_router(shop.router)
 
     app.include_router(api)
 

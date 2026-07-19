@@ -53,6 +53,12 @@ Frontend nativo: `cd frontend && yarn install && yarn start`.
 - **A Home é um grid de 6 tiles, sem botão JOGAR** (mockup de 2026-07-18). Loja e Vídeo Aulas são tiles "Em breve" (sem backend). O CTA que retoma a próxima lição é o `cta-comecar`, na página **Aprender** — quem mexer na Home precisa lembrar que `drive.js` da skill `run-app` navega por esses testids.
 - **`HubTile` (Home) e `FeatureCard` (Aprender) são separados de propósito** — um é ícone grande centralizado sem descrição, o outro é card alinhado à esquerda com descrição. Unificar exigiria uma prop que reescreve o corpo inteiro.
 - **As estrelas do caminho são a nota real, e não custaram backend nenhum.** `progress_service.complete_lesson` já guardava a **melhor** nota por lição, e `LessonSummary.score` já vinha em `/learning/phases`. `frontend/src/lib/stars.js` só traduz: >=90 → 3, >=70 → 2, passou (>=60, o `PASS_THRESHOLD`) → 1. Como é a melhor nota, estrela **nunca regride** — e rejogar melhora a estrela sem dar XP de novo. **Só lição concluída desenha estrelas**; fileira vazia diria "você tirou zero" em vez de "você ainda não veio aqui".
+- **Loja: `xp` nunca diminui.** Comprar incrementa `user.xp_spent`; o saldo gastável é `xp - xp_spent`. `xp` continua sendo total-da-vida e é dele que saem ranking, nível e conquistas. Se a compra descontasse de `xp`, comprar um chapéu faria o jogador cair no ranking, **regredir de nível e perder conquistas já desbloqueadas** (elas são derivadas do XP a cada request). Decidido em 2026-07-18. Ver `backend/app/models/shop.py`.
+  - **Catálogo mora no código** (`app/models/shop.py`), como o de conquistas. Preço **nunca** vem do request — só o `item_id`.
+  - **Ids de avatar do catálogo têm que existir em `AVATAR_IDS`**, senão a compra passa e o equipamento estoura.
+  - **`PATCH /users/me` valida posse.** Sem isso ele é um atalho grátis em volta da loja: o allowlist só diz que o avatar *existe*, não que a pessoa pode usá-lo. Ver `test_paid_avatar_requires_purchase`.
+  - O seletor de avatar do Perfil mostra **só os possuídos** (vem do `owned` da loja) — listar o catálogo inteiro daria 403 na metade dos botões.
+  - `frontend/src/lib/accessories.js` mapeia id → emoji e precisa ficar **em sync** com `ACCESSORY_ITEMS`. Id desconhecido só não desenha o acessório; não quebra.
 - **Conquistas são derivadas, não armazenadas**: `achievement_service` avalia o catálogo contra xp/streak-mais-longo/lições-concluídas a cada request. Não existe registro de "desbloqueou em X". Se precisar da data, criar coleção de unlocks — não dá pra recuperar retroativamente.
 - **Streak das conquistas usa `streak.longest`**, não `current` — senão a medalha some no dia em que o usuário perde a sequência.
 - **Ranking usa "competition ranking"**: empatados em XP dividem o mesmo rank (1,2,2,4). Isso é obrigatório — o rank de quem está *fora* da página é derivado de `count_with_more_xp`, e um `enumerate()` posicional faria o mesmo usuário ver números diferentes conforme o `limit`. Ver `_competition_ranks` + `test_own_rank_does_not_depend_on_limit`.
@@ -97,6 +103,8 @@ Sprints que só mexem em docs (README, este arquivo) podem pular o `docker compo
 | Caminho de fases (estilo Duolingo) | `frontend/src/pages/Lessons.jsx`, `components/LessonNode.jsx`, `components/PhaseBanner.jsx`, `components/PathConnector.jsx`, `components/PathMarker.jsx` |
 | Estrelas por lição | `frontend/src/lib/stars.js`, `components/LessonStars.jsx` |
 | Hub da Home / marca | `frontend/src/pages/Home.jsx`, `components/HubTile.jsx`, `components/Wordmark.jsx` |
+| Loja / compras com XP | `backend/app/models/shop.py` (catálogo), `services/shop_service.py`, `routers/shop.py`, `frontend/src/pages/Shop.jsx`, `lib/hooks/useShop.js`, `lib/accessories.js` |
+| Vídeo aulas | `frontend/src/pages/VideoLessons.jsx` (usa as fases + `SignMedia`) |
 | Nível / gemas a partir do XP | `frontend/src/lib/level.js` |
 | Sinais / dicionário | `backend/app/repositories/sign_repo.py`, `frontend/src/pages/Dictionary.jsx`, `frontend/src/lib/hooks/useSearchSigns.js` |
 | Vídeo de sinal (transcodificar / exibir) | `backend/scripts/build_sign_videos.py`, `frontend/src/components/SignMedia.jsx`, `backend/app/models/learning.py` (`SignView`) |

@@ -22,8 +22,8 @@ const HUB = [
   { icon: MapPin,      tone: "blue",   to: "/lessons",      testId: "hub-fases",     title: "Fases" },
   { icon: Target,      tone: "yellow", to: "/achievements", testId: "hub-objetivos", title: "Objetivos" },
   { icon: Trophy,      tone: "yellow", to: "/ranking",      testId: "hub-ranking",   title: "Ranking" },
-  { icon: ShoppingCart,tone: "yellow", soon: true,          testId: "hub-loja",      title: "Loja" },
-  { icon: PlayCircle,  tone: "blue",   soon: true,          testId: "hub-videoaulas",title: "Vídeo Aulas" },
+  { icon: ShoppingCart,tone: "yellow", to: "/shop",          testId: "hub-loja",      title: "Loja" },
+  { icon: PlayCircle,  tone: "blue",   to: "/video-lessons", testId: "hub-videoaulas",title: "Vídeo Aulas" },
 ];
 
 export default function Home() {

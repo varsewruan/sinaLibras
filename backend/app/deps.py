@@ -26,6 +26,7 @@ from app.services.auth_service import AuthService
 from app.services.learning_service import LearningService
 from app.services.progress_service import ProgressService
 from app.services.ranking_service import RankingService
+from app.services.shop_service import ShopService
 from app.services.user_service import UserService
 
 
@@ -83,6 +84,10 @@ def get_user_service(users: UserRepository = Depends(get_user_repo)) -> UserServ
 
 def get_ranking_service(users: UserRepository = Depends(get_user_repo)) -> RankingService:
     return RankingService(users=users)
+
+
+def get_shop_service(users: UserRepository = Depends(get_user_repo)) -> ShopService:
+    return ShopService(users=users)
 
 
 def get_achievement_service(
