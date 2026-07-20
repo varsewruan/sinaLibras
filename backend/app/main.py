@@ -17,13 +17,12 @@ from fastapi import APIRouter, FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from starlette.middleware.cors import CORSMiddleware
 
 from app.core.config import Settings, get_settings
-from app.core.errors import validation_exception_handler
+from app.core.errors import rate_limit_exceeded_handler, validation_exception_handler
 from app.core.logging import get_logger, setup_logging
 from app.core.rate_limit import limiter
 from app.db.mongo import close_mongo_connection, connect_to_mongo, ensure_indexes
@@ -66,7 +65,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     # Rate limiter — must be installed BEFORE routes register their @limiter.limit decorators.
     app.state.limiter = limiter
-    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+    # Ours, not slowapi's — the built-in returns {"error": "..."} in English,
+    # which the SPA can't read. See app.core.errors.
+    app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
     app.add_middleware(SlowAPIMiddleware)
 
     # Renders pydantic's 422s in Portuguese. Same status and body shape as

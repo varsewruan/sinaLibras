@@ -1,11 +1,11 @@
 """
-Portuguese rendering of FastAPI's 422 validation errors.
+Portuguese rendering of the two errors our own code never gets to phrase:
+pydantic's 422s and slowapi's 429.
 
 Everything else in the API raises its own `{code, message}` detail, already
-written in Portuguese. Pydantic's automatic validation errors are the one
-place the user could still be shown English ("Field required", "String
-should have at least 8 characters"), because those strings come from the
-library, not from us.
+written in Portuguese. These two are generated inside libraries, so without
+a handler the user is shown English ("Field required", "Rate limit
+exceeded: 3 per 1 minute").
 
 This handler rewrites only the `msg` of each error. The response shape is
 deliberately unchanged — status 422 with `detail` as a list of
@@ -27,6 +27,7 @@ from fastapi import Request, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from slowapi.errors import RateLimitExceeded
 
 # Field names as they appear mid-sentence, with the definite article so the
 # generated messages read naturally ("Informe a senha." / "A senha deve...").
@@ -104,6 +105,39 @@ def translate_validation_error(error: dict[str, Any]) -> str:
     # Unknown type: a generic Portuguese sentence still beats leaking the
     # library's English at the user.
     return f"{label.capitalize()} é inválido." if label else "Valor inválido."
+
+
+async def rate_limit_exceeded_handler(
+    request: Request, exc: RateLimitExceeded
+) -> JSONResponse:
+    """
+    429s in the same `{code, message}` shape as every other error we raise.
+
+    slowapi's built-in handler answers `{"error": "Rate limit exceeded: 3 per
+    1 minute"}` — no `detail` key, and in English. The SPA reads
+    `data.detail.message` (Login/Register.jsx), finds nothing, and falls back
+    to a generic "Falha ao criar conta.", so the one thing the user needed to
+    know — that it's temporary and waiting fixes it — was the one thing that
+    never reached the screen.
+
+    The wait isn't named in the message on purpose: the window is configurable
+    per environment (seconds in the desktop build, a minute on the web), so a
+    hardcoded "um minuto" would be a lie in half the deploys.
+    """
+    response = JSONResponse(
+        status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+        content={
+            "detail": {
+                "code": "rate_limited",
+                "message": "Muitas tentativas seguidas. Espere um pouco e tente de novo.",
+            }
+        },
+    )
+    # Keeps slowapi's X-RateLimit-*/Retry-After headers, which the default
+    # handler adds and clients may rely on.
+    return request.app.state.limiter._inject_headers(
+        response, request.state.view_rate_limit
+    )
 
 
 async def validation_exception_handler(

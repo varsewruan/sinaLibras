@@ -275,6 +275,17 @@ def configure_env(*, mongo_port: int) -> None:
         "COOKIE_SAMESITE": "lax",
         "FRONTEND_BUILD_DIR": str(bundle / "frontend_build"),
         "SIGNS_DIR": str(bundle / "signs"),
+        # Os limites padrão (3 cadastros/minuto, 5 logins/minuto) existem pra
+        # conter força bruta num servidor público. Aqui não há servidor
+        # público: o banco é local, de uma pessoa só, na máquina dela — não há
+        # de quem proteger. O que sobrava era só o dano: errar a senha três
+        # vezes (ela precisa ter 8+ caracteres) travava a quarta tentativa,
+        # a correta, por um minuto inteiro.
+        # Mantemos um limite mínimo em vez de desligar: ele ainda segura um
+        # loop acidental, e a janela de 3s é curta demais pra alguém notar.
+        "RATE_LIMIT_REGISTER": "5/3seconds",
+        "RATE_LIMIT_LOGIN": "5/3seconds",
+        "RATE_LIMIT_REFRESH": "20/3seconds",
     })
 
 

@@ -123,3 +123,32 @@ async def test_422_mantem_o_formato_que_o_spa_espera(client):
     detail = r.json()["detail"]
     assert isinstance(detail, list)
     assert all("msg" in e and "loc" in e and "type" in e for e in detail)
+
+
+# ---------------- 429 do slowapi --------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_rate_limit_responde_no_formato_do_contrato(client, apertar_rate_limit):
+    """
+    O handler embutido do slowapi responde `{"error": "Rate limit exceeded:
+    ..."}` — sem `detail`, e em inglês. O SPA lia `detail.message`, não achava
+    nada e caía no genérico "Falha ao criar conta.", escondendo justamente a
+    única informação útil: que passa sozinho.
+    """
+    apertar_rate_limit("RATE_LIMIT_REGISTER", "1/minute")
+
+    primeira = await client.post(
+        "/api/auth/register",
+        json={"email": "limite1@sinalibras.dev", "name": "X", "password": SENHA},
+    )
+    assert primeira.status_code == 201, primeira.text
+
+    bloqueada = await client.post(
+        "/api/auth/register",
+        json={"email": "limite2@sinalibras.dev", "name": "Y", "password": SENHA},
+    )
+    assert bloqueada.status_code == 429
+    detail = bloqueada.json()["detail"]
+    assert detail["code"] == "rate_limited"
+    assert "tentativas" in detail["message"]
