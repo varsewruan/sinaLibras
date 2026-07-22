@@ -125,17 +125,6 @@ export const LessonNode = ({ lesson, state, number, isPhaseEnd, offset }) => {
           <LessonStars earned={stars} />
         </span>
       )}
-
-      <span
-        className={clsx(
-          "mt-1.5 max-w-[140px] rounded-lg px-2.5 py-1 text-center text-[11px] font-black uppercase leading-tight tracking-wide",
-          state === "locked"
-            ? "bg-[#16244180] text-white/30"
-            : "bg-[#16294f] text-white/80 ring-1 ring-white/10"
-        )}
-      >
-        {lesson.title}
-      </span>
     </div>
   );
 };

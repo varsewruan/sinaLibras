@@ -92,7 +92,7 @@ export default function Lessons() {
 
           {total > 0 && (
             <div className="flex justify-center">
-              <PathMarker variant="start" label="Início" />
+              <PathMarker label="Início" />
             </div>
           )}
 
@@ -137,11 +137,6 @@ export default function Lessons() {
             );
           })}
 
-          {total > 0 && (
-            <div className="flex justify-center">
-              <PathMarker variant="finish" label="Final" />
-            </div>
-          )}
         </div>
       )}
     </AppShell>

@@ -2,7 +2,7 @@
 Transcode the raw sign-language captures into web-deliverable video.
 
 The source clips are QuickTime Animation (`qtrle`, `argb`) — lossless RGB with
-a real alpha channel, 1920x1080, ~1-1.6s each, around 50 MB per second of
+a real alpha channel, 1920x1080, ~1-3.3s each, around 50 MB per second of
 footage. No browser plays that container, so every clip becomes three files:
 
   <slug>.webm          VP9 with alpha (yuva420p) — Chrome / Firefox / Edge
@@ -14,8 +14,9 @@ VP9-alpha is unsupported in Safari, and HEVC-with-alpha (the Safari answer)
 needs a macOS encoder we do not have. The frontend lists both in <source>
 order, so Safari silently falls back to the flattened MP4.
 
-Run (from backend/):
-    python -m scripts.build_sign_videos --src "C:/.../SINAIS/SINAIS"
+Run (from backend/), pointing --src at the folder that holds the per-phase
+subdirectories (Cumprimentos/, Familia/, Cores/):
+    python -m scripts.build_sign_videos --src ".../Sinais (1)"
     python -m scripts.build_sign_videos --src ... --only bom-dia   # one slug
     python -m scripts.build_sign_videos --src ... --list           # dry run
 
@@ -35,64 +36,81 @@ from pathlib import Path
 from scripts.build_sign_assets import slugify
 
 # ----------------------------- Source mapping -------------------------------
-# Source stem (no extension) → catalog terms it provides video for.
+# Source clip (path relative to --src, no extension) → catalog terms it fills.
+#
+# The corpus is organised in per-phase subfolders (Cumprimentos/, Familia/,
+# Cores/), so each key carries that subpath: `args.src / f"{key}.mov"`.
 #
 # Terms MUST match CATALOG_TERMS in build_sign_assets.py character for
-# character (including the "?" in "Tudo bem?") — the manifest is keyed by term
-# and seed.py looks it up verbatim.
+# character (including the "?" in "Tudo bem?" and "Como vai?") — the manifest
+# is keyed by term and seed.py looks it up verbatim.
 #
-# Some clips cover two catalog entries: the source corpus records one gesture
-# for "Tio - Tia" and one for "Irmãos". Both terms point at the same encoded
-# files rather than duplicating the bytes; the file is named after the first
-# term's slug.
+# This is the 2026-07-22 re-shoot: one clean recording per term, so the map is
+# 1:1. The retired first corpus shared a clip across "Tio"/"Tia" and
+# "Irmão"/"Irmã"; these give each its own footage. Entries are in catalog
+# order so the slug dedup in main() assigns "avo"/"avo-2" to "Avô"/"Avó" the
+# same way build_sign_assets.py does for the SVGs.
+#
+# This map covers every catalog term. "Obrigado" and "Cinza" had no footage
+# and were dropped from the catalog on 2026-07-22, so nothing here falls back
+# to an SVG. "prima.mov" was shot but the catalog has no "Prima" term (only
+# "Primo"), so it is left out.
 SOURCE_MAP: dict[str, list[str]] = {
-    "Boa noite_1_1": ["Boa noite"],
-    "Boa tarde_1":  ["Boa tarde"],
-    "Oi - Olá_1":   ["Olá"],
-    "Bom dia_1":    ["Bom dia"],
-    "Filho_1":      ["Filho"],
-    "Irmãos_1":     ["Irmão", "Irmã"],
-    "Mãe_1":        ["Mãe"],
-    "Pai_1":        ["Pai"],
-    "Primo(a)_1":   ["Primo"],
-    "Tio - Tia_1":  ["Tio", "Tia"],
-    "Tudo bem_1":   ["Tudo bem?"],
+    # Fase 1 — Cumprimentos
+    "Cumprimentos/olá":       ["Olá"],
+    "Cumprimentos/tchau":     ["Tchau"],
+    "Cumprimentos/tudo bem":  ["Tudo bem?"],
+    "Cumprimentos/bom dia":   ["Bom dia"],
+    "Cumprimentos/boa tarde": ["Boa tarde"],
+    "Cumprimentos/boa noite": ["Boa noite"],
+    "Cumprimentos/até logo":  ["Até logo"],
+    "Cumprimentos/prazer":    ["Prazer"],
+    "Cumprimentos/como vai":  ["Como vai?"],
+    "Cumprimentos/me chamo":  ["Me chamo"],
+    "Cumprimentos/você":      ["Você"],
+    # Fase 2 — Família
+    "Familia/pai":      ["Pai"],
+    "Familia/mãe":      ["Mãe"],
+    "Familia/filho":    ["Filho"],
+    "Familia/filha":    ["Filha"],
+    "Familia/irmão":    ["Irmão"],
+    "Familia/irmã":     ["Irmã"],
+    "Familia/bebê":     ["Bebê"],
+    "Familia/família":  ["Família"],
+    "Familia/avô":      ["Avô"],
+    "Familia/avó":      ["Avó"],
+    "Familia/tio":      ["Tio"],
+    "Familia/tia":      ["Tia"],
+    "Familia/primo":    ["Primo"],
+    # Fase 3 — Cores
+    "Cores/vermelho":        ["Vermelho"],
+    "Cores/azul":            ["Azul"],
+    "Cores/amarelo":         ["Amarelo"],
+    "Cores/verde":           ["Verde"],
+    "Cores/branco":          ["Branco"],
+    "Cores/preto":           ["Preto"],
+    "Cores/marrom castanho": ["Marrom"],
+    "Cores/rosa":            ["Rosa"],
+    "Cores/roxo":            ["Roxo"],
+    "Cores/laranja":         ["Laranja"],
+    "Cores/dourado":         ["Dourado"],
 }
 
-# Clips whose source has a rectangular block of destroyed pixels over the
-# torso — a botched watermark removal, baked into the RGB and not just the
-# alpha mask, so nothing here can recover it. The fix is a clean re-export
-# from the original footage.
+# Per-clip workarounds for source defects, all keyed by `source.stem` (the file
+# name with no folder or extension, e.g. "bom dia"):
+#   DAMAGED     — clip with a block of destroyed pixels (botched watermark
+#                 removal), baked into the RGB; ships anyway, only documental.
+#   CROP_HEIGHT — pixels to keep from the top, to cut a caption graphic burned
+#                 into the lower band (the term spelled out = the quiz answer).
+#   SLOWDOWN    — setpts factor for a clip too short to loop without strobing.
 #
-# They ship anyway: a visible blemish beats no demo at all for the greetings,
-# which are the first phase a learner sees. Move an entry here into nothing —
-# just drop it from SOURCE_MAP — to fall back to the SVG placeholder instead.
-DAMAGED: dict[str, list[str]] = {
-    "Boa noite_1_1": ["Boa noite"],
-    "Boa tarde_1":   ["Boa tarde"],
-    "Oi - Olá_1":    ["Olá"],
-}
-
-# Some captures have a caption graphic burned into the lower band — the term
-# spelled out in Portuguese. Lesson.jsx shows the sign as a quiz prompt, so
-# that band is literally the answer printed on screen; it gets cropped away.
-#
-# Value is how much of the 1920x1080 source to keep, measured from the top.
-# Verify a new entry by eye before trusting it: these signs are performed at
-# chest height and cropping too far eats the gesture.
-CROP_HEIGHT: dict[str, int] = {
-    "Bom dia_1": 780,  # "BOM DIA" label fades in over the second half
-}
-
-# Playback slowdown, per clip. Most captures run 0.7-1.6s and loop fine at
-# native speed; "Tudo bem" is four frames (0.13s) and strobes instead of
-# looping. Slowing it is the only lever the footage allows — those four frames
-# are nearly identical, so the gesture was never recorded and no amount of
-# interpolation would invent it. At 8x the clip reads as a held pose, which is
-# honest about what the source contains. A real capture would replace this.
-SLOWDOWN: dict[str, float] = {
-    "Tudo bem_1": 8.0,
-}
+# The 2026-07-22 corpus is clean — no burned captions, no destroyed pixels,
+# every clip runs ≥1s and loops on its own — so all three are empty. They stay
+# as the documented lever for a future clip that regresses; git history shows
+# how the retired first corpus used each.
+DAMAGED: dict[str, list[str]] = {}
+CROP_HEIGHT: dict[str, int] = {}
+SLOWDOWN: dict[str, float] = {}
 
 SRC_WIDTH = 1920
 SRC_HEIGHT = 1080
@@ -106,6 +124,12 @@ CARD_COLOR = "0x172f4f"
 
 # 1080p is far more than a card needs and doubles the VP9 encode time.
 OUT_WIDTH = 960
+
+# The captures declare a 1/1323000000 timebase — its denominator is above
+# libvpx-vp9's g_timebase limit (1e9), so VP9 refuses to open the encoder on
+# the raw stream. Resampling to a fixed frame rate hands every encoder a sane
+# 1/FPS timebase; 30 matches the sources' ~30.01 fps and yields CFR web output.
+FPS = 30
 
 VIDEO_SUBDIR = "video"
 MANIFEST_NAME = "video-manifest.json"
@@ -127,6 +151,9 @@ def _source_chain(crop_h: int, slow: float) -> str:
         # is interpolated — see SLOWDOWN.
         steps.append(f"setpts={slow}*PTS")
     steps.append(f"scale={OUT_WIDTH}:-2")
+    # Last, so a SLOWDOWN setpts above just repeats frames to fill the stretched
+    # duration, and so every encode gets the sane timebase FPS documents.
+    steps.append(f"fps={FPS}")
     return ",".join(steps)
 
 
@@ -217,9 +244,16 @@ def main() -> None:
     manifest: dict[str, dict[str, str]] = {}
     plan: list[tuple[Path, str, list[str]]] = []
 
+    # Disambiguate slug collisions the same way build_sign_assets.py does:
+    # "Avô" and "Avó" both reduce to "avo" after accent stripping, so the
+    # second keeps "avo-2". Count over every mapped clip (missing or --only
+    # skipped included) so a term's slug never depends on which clips run.
+    slug_counts: dict[str, int] = {}
     for stem, terms in SOURCE_MAP.items():
         source = args.src / f"{stem}.mov"
-        slug = slugify(terms[0])
+        base = slugify(terms[0])
+        slug_counts[base] = slug_counts.get(base, 0) + 1
+        slug = base if slug_counts[base] == 1 else f"{base}-{slug_counts[base]}"
         if args.only and slug != args.only:
             continue
         if not source.is_file():
@@ -285,8 +319,8 @@ def main() -> None:
     )
 
     print()
-    print(f"{len(plan)} clipe(s) → {len(manifest)} termo(s) com vídeo")
-    print(f"{total_in / 1024 / 1024:.0f} MB de origem → {total_out / 1024 / 1024:.1f} MB entregues")
+    print(f"{len(plan)} clipe(s) -> {len(manifest)} termo(s) com vídeo")
+    print(f"{total_in / 1024 / 1024:.0f} MB de origem -> {total_out / 1024 / 1024:.1f} MB entregues")
     print(f"Manifesto: {manifest_path}")
     shipped_damaged = [s for s in DAMAGED if s in {p[0].stem for p in plan}]
     if shipped_damaged:

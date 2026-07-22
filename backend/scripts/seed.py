@@ -1,5 +1,5 @@
 """
-Seed the catalog with placeholder content (3 phases, 9 lessons, ~36 signs).
+Seed the catalog with placeholder content (3 phases, 9 lessons, 35 signs).
 
 Run:
     docker compose run --rm backend python -m scripts.seed
@@ -75,7 +75,7 @@ CATALOG = [
         "description": "Os primeiros sinais — diga olá, tchau, bom dia.",
         "lessons": [
             {"order": 1, "title": "Olá e Tchau", "xp_reward": 20,
-             "signs": ["Olá", "Tchau", "Tudo bem?", "Obrigado"]},
+             "signs": ["Olá", "Tchau", "Tudo bem?"]},
             {"order": 2, "title": "Bom dia/tarde/noite", "xp_reward": 25,
              "signs": ["Bom dia", "Boa tarde", "Boa noite", "Até logo"]},
             {"order": 3, "title": "Cumprimentos formais", "xp_reward": 30,
@@ -102,8 +102,8 @@ CATALOG = [
         "lessons": [
             {"order": 1, "title": "Cores primárias", "xp_reward": 20,
              "signs": ["Vermelho", "Azul", "Amarelo", "Verde"]},
-            {"order": 2, "title": "Branco, preto e cinza", "xp_reward": 20,
-             "signs": ["Branco", "Preto", "Cinza", "Marrom"]},
+            {"order": 2, "title": "Branco, preto e marrom", "xp_reward": 20,
+             "signs": ["Branco", "Preto", "Marrom"]},
             {"order": 3, "title": "Tons vibrantes", "xp_reward": 25,
              "signs": ["Rosa", "Roxo", "Laranja", "Dourado"]},
         ],
