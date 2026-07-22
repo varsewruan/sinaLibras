@@ -1,12 +1,15 @@
 """
-Seed the catalog with placeholder content (3 phases, 9 lessons, ~36 signs).
+Seed the catalog with placeholder content (3 phases, 9 lessons, 35 signs).
 
 Run:
     docker compose run --rm backend python -m scripts.seed
     docker compose run --rm backend python -m scripts.seed --reset
 
-Idempotent: by default it skips entities that already exist (matched by
-natural keys: phase.order, lesson.(phase_id, order), sign.portuguese_term).
+Idempotent, matched by natural keys (phase.order, lesson.(phase_id, order),
+sign.portuguese_term): existing phases are left as-is; existing lessons are
+reconciled (title/xp/sign_ids updated when the catalog changes) and signs whose
+term left the catalog are pruned. So an already-seeded DB converges on the
+current catalog on every run — the desktop re-seeds with reset=False each boot.
 With --reset, it drops the three collections first.
 
 The image URLs are placeholders from placehold.co — replace with real
@@ -75,7 +78,7 @@ CATALOG = [
         "description": "Os primeiros sinais — diga olá, tchau, bom dia.",
         "lessons": [
             {"order": 1, "title": "Olá e Tchau", "xp_reward": 20,
-             "signs": ["Olá", "Tchau", "Tudo bem?", "Obrigado"]},
+             "signs": ["Olá", "Tchau", "Tudo bem?"]},
             {"order": 2, "title": "Bom dia/tarde/noite", "xp_reward": 25,
              "signs": ["Bom dia", "Boa tarde", "Boa noite", "Até logo"]},
             {"order": 3, "title": "Cumprimentos formais", "xp_reward": 30,
@@ -102,8 +105,8 @@ CATALOG = [
         "lessons": [
             {"order": 1, "title": "Cores primárias", "xp_reward": 20,
              "signs": ["Vermelho", "Azul", "Amarelo", "Verde"]},
-            {"order": 2, "title": "Branco, preto e cinza", "xp_reward": 20,
-             "signs": ["Branco", "Preto", "Cinza", "Marrom"]},
+            {"order": 2, "title": "Branco, preto e marrom", "xp_reward": 20,
+             "signs": ["Branco", "Preto", "Marrom"]},
             {"order": 3, "title": "Tons vibrantes", "xp_reward": 25,
              "signs": ["Rosa", "Roxo", "Laranja", "Dourado"]},
         ],
@@ -193,13 +196,31 @@ async def _seed_lesson(
     xp_reward: int,
     sign_ids: list[str],
 ) -> str:
+    description = f"{title} — pratique até dominar."
     existing = await db.lessons.find_one({"phase_id": phase_id, "order": order})
     if existing:
+        # Reconcile uma lição cuja composição mudou no catálogo (um termo
+        # removido, renomeado ou reapontado). Sem isso, um banco já semeado
+        # mantém para sempre os sign_ids/título antigos — p.ex. a lição ainda
+        # listando um termo que saiu do catálogo. Atualizar no lugar preserva o
+        # _id da lição, então o progresso do usuário (indexado por lesson id)
+        # sobrevive.
+        desired = {
+            "title": title,
+            "description": description,
+            "xp_reward": xp_reward,
+            "sign_ids": sign_ids,
+        }
+        drifted = {k: v for k, v in desired.items() if existing.get(k) != v}
+        if drifted:
+            await db.lessons.update_one({"_id": existing["_id"]}, {"$set": drifted})
+            logger.info("seed_lesson_updated", title=title, phase_id=phase_id,
+                        order=order, fields=sorted(drifted))
         return existing["_id"]
     lesson = Lesson(
         phase_id=phase_id,
         title=title,
-        description=f"{title} — pratique até dominar.",
+        description=description,
         order=order,
         xp_reward=xp_reward,
         sign_ids=sign_ids,
@@ -286,6 +307,21 @@ async def run(*, reset: bool, demo_users: bool = False) -> None:
                 xp_reward=lesson_def["xp_reward"],
                 sign_ids=sign_ids,
             )
+
+    # Poda sinais cujo termo saiu do catálogo. O laço acima só faz upsert dos
+    # termos do catálogo; sem isto, um termo removido do CATALOG fica para
+    # sempre num banco já semeado e continua aparecendo no dicionário (o
+    # desktop re-semeia com reset=False a cada boot). Instalação nova nunca cai
+    # aqui — nasce direto no catálogo atual.
+    catalog_terms = [
+        term
+        for phase_def in CATALOG
+        for lesson_def in phase_def["lessons"]
+        for term in lesson_def["signs"]
+    ]
+    pruned = await db.signs.delete_many({"portuguese_term": {"$nin": catalog_terms}})
+    if pruned.deleted_count:
+        logger.info("seed_signs_pruned", count=pruned.deleted_count)
 
     if demo_users:
         await _seed_demo_users(db)

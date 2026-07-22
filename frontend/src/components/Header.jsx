@@ -3,8 +3,9 @@
  * profile). Right: XP (gold star), gems (cyan), notifications, settings.
  *
  * The star/level numbers roll in via framer-motion so an XP gain feels
- * rewarding. The streak lives in the sidebar (desktop) — here we surface XP
- * and the cosmetic gem currency, matching the reference layout.
+ * rewarding. Since the sidebar was removed this bar carries the streak too —
+ * it was the sidebar's only unique content, and losing it would have made the
+ * streak invisible on desktop.
  */
 
 import { Link } from "react-router-dom";
@@ -14,6 +15,7 @@ import { toast } from "sonner";
 
 import { useAuth } from "@/context/AuthContext";
 import { UserAvatar } from "@/components/UserAvatar";
+import { Wordmark } from "@/components/Wordmark";
 import { gemsFromXp, levelFromXp } from "@/lib/level";
 
 const RollingNumber = ({ value }) => (
@@ -62,10 +64,28 @@ export const Header = () => {
 
   return (
     <header className="sticky top-0 z-30 bg-[#0e1f3d]/95 backdrop-blur border-b border-white/10 shadow-md">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
-        {/* Mobile logo (sidebar is hidden < lg) */}
-        <Link to="/" className="lg:hidden flex items-center gap-1.5 mr-1" aria-label="Início">
-          <Hand className="w-6 h-6 text-primary -rotate-12" strokeWidth={2.5} />
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
+        {/* Home link, compact form. Below lg the centered wordmark would
+            collide with the stat pills, so the hand icon stands in — with the
+            sidebar gone, losing the home link entirely would strand the user
+            on whatever page they clicked into. */}
+        <Link
+          to="/"
+          className="lg:hidden flex items-center shrink-0 mr-1"
+          aria-label="Início"
+        >
+          <Hand className="w-6 h-6 text-primary -rotate-12 shrink-0" strokeWidth={2.5} aria-hidden="true" />
+        </Link>
+
+        {/* Home link, centered form (lg+). Absolute so it centers against the
+            header itself rather than against whatever the flex row leaves
+            over — the left and right clusters have very different widths. */}
+        <Link
+          to="/"
+          aria-label="Início"
+          className="hidden lg:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+        >
+          <Wordmark as="span" className="text-xl transition-opacity hover:opacity-80" />
         </Link>
 
         {/* Identity — links to profile */}
@@ -74,7 +94,7 @@ export const Header = () => {
           className="flex items-center gap-3 min-w-0 rounded-full pr-3 hover:bg-white/5 transition-colors"
           data-testid="header-profile"
         >
-          <UserAvatar avatar={user?.avatar} size={40} ring />
+          <UserAvatar avatar={user?.avatar} accessory={user?.accessory} size={40} ring />
           <div className="hidden sm:block leading-tight min-w-0">
             <p className="font-black text-white truncate max-w-[10rem]">{user?.name ?? "—"}</p>
             <p className="text-xs font-bold text-white/50">Nível {String(level).padStart(2, "0")}</p>
@@ -87,8 +107,7 @@ export const Header = () => {
             icon={Gem} value={gems} color="#38BDF8" label="Gemas" testId="stat-gems"
             trailing={<Plus className="w-3 h-3 text-gem" strokeWidth={3} aria-hidden="true" />}
           />
-          {/* Streak also lives in the desktop sidebar; the mockup puts it in
-              the top bar too, which is the only place mobile users see it. */}
+          {/* The only place the streak appears now that the sidebar is gone. */}
           <div className="hidden sm:block">
             <StatPill icon={Flame} value={streak} color="#FB923C" label="Sequência" testId="stat-streak" />
           </div>

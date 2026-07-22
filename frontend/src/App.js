@@ -18,6 +18,8 @@ import Login from "@/pages/Login";
 import Profile from "@/pages/Profile";
 import Ranking from "@/pages/Ranking";
 import Register from "@/pages/Register";
+import Shop from "@/pages/Shop";
+import VideoLessons from "@/pages/VideoLessons";
 
 const Protected = ({ children }) => <ProtectedRoute>{children}</ProtectedRoute>;
 
@@ -49,6 +51,8 @@ const AnimatedRoutes = () => {
           <Route path="/ranking"      element={<Protected><Ranking /></Protected>} />
           <Route path="/achievements" element={<Protected><Achievements /></Protected>} />
           <Route path="/profile"      element={<Protected><Profile /></Protected>} />
+          <Route path="/shop"         element={<Protected><Shop /></Protected>} />
+          <Route path="/video-lessons" element={<Protected><VideoLessons /></Protected>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </motion.div>

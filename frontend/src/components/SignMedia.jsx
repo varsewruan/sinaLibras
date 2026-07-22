@@ -36,7 +36,7 @@ export const SignMedia = ({
         poster={poster || undefined}
         // <video> has no alt; the accessible name has to be spelled out.
         aria-label={label}
-        // Clips run 1-1.6s. Looping lets a learner watch the gesture over and
+        // Clips run ~1-3s. Looping lets a learner watch the gesture over and
         // over without hunting for a replay control.
         loop
         muted

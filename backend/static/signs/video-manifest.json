@@ -1,4 +1,34 @@
 {
+  "Amarelo": {
+    "mp4": "/signs/video/amarelo.mp4",
+    "poster": "/signs/video/amarelo-poster.jpg",
+    "webm": "/signs/video/amarelo.webm"
+  },
+  "Até logo": {
+    "mp4": "/signs/video/ate-logo.mp4",
+    "poster": "/signs/video/ate-logo-poster.jpg",
+    "webm": "/signs/video/ate-logo.webm"
+  },
+  "Avó": {
+    "mp4": "/signs/video/avo-2.mp4",
+    "poster": "/signs/video/avo-2-poster.jpg",
+    "webm": "/signs/video/avo-2.webm"
+  },
+  "Avô": {
+    "mp4": "/signs/video/avo.mp4",
+    "poster": "/signs/video/avo-poster.jpg",
+    "webm": "/signs/video/avo.webm"
+  },
+  "Azul": {
+    "mp4": "/signs/video/azul.mp4",
+    "poster": "/signs/video/azul-poster.jpg",
+    "webm": "/signs/video/azul.webm"
+  },
+  "Bebê": {
+    "mp4": "/signs/video/bebe.mp4",
+    "poster": "/signs/video/bebe-poster.jpg",
+    "webm": "/signs/video/bebe.webm"
+  },
   "Boa noite": {
     "mp4": "/signs/video/boa-noite.mp4",
     "poster": "/signs/video/boa-noite-poster.jpg",
@@ -14,20 +44,60 @@
     "poster": "/signs/video/bom-dia-poster.jpg",
     "webm": "/signs/video/bom-dia.webm"
   },
+  "Branco": {
+    "mp4": "/signs/video/branco.mp4",
+    "poster": "/signs/video/branco-poster.jpg",
+    "webm": "/signs/video/branco.webm"
+  },
+  "Como vai?": {
+    "mp4": "/signs/video/como-vai.mp4",
+    "poster": "/signs/video/como-vai-poster.jpg",
+    "webm": "/signs/video/como-vai.webm"
+  },
+  "Dourado": {
+    "mp4": "/signs/video/dourado.mp4",
+    "poster": "/signs/video/dourado-poster.jpg",
+    "webm": "/signs/video/dourado.webm"
+  },
+  "Família": {
+    "mp4": "/signs/video/familia.mp4",
+    "poster": "/signs/video/familia-poster.jpg",
+    "webm": "/signs/video/familia.webm"
+  },
+  "Filha": {
+    "mp4": "/signs/video/filha.mp4",
+    "poster": "/signs/video/filha-poster.jpg",
+    "webm": "/signs/video/filha.webm"
+  },
   "Filho": {
     "mp4": "/signs/video/filho.mp4",
     "poster": "/signs/video/filho-poster.jpg",
     "webm": "/signs/video/filho.webm"
   },
   "Irmã": {
-    "mp4": "/signs/video/irmao.mp4",
-    "poster": "/signs/video/irmao-poster.jpg",
-    "webm": "/signs/video/irmao.webm"
+    "mp4": "/signs/video/irma.mp4",
+    "poster": "/signs/video/irma-poster.jpg",
+    "webm": "/signs/video/irma.webm"
   },
   "Irmão": {
     "mp4": "/signs/video/irmao.mp4",
     "poster": "/signs/video/irmao-poster.jpg",
     "webm": "/signs/video/irmao.webm"
+  },
+  "Laranja": {
+    "mp4": "/signs/video/laranja.mp4",
+    "poster": "/signs/video/laranja-poster.jpg",
+    "webm": "/signs/video/laranja.webm"
+  },
+  "Marrom": {
+    "mp4": "/signs/video/marrom.mp4",
+    "poster": "/signs/video/marrom-poster.jpg",
+    "webm": "/signs/video/marrom.webm"
+  },
+  "Me chamo": {
+    "mp4": "/signs/video/me-chamo.mp4",
+    "poster": "/signs/video/me-chamo-poster.jpg",
+    "webm": "/signs/video/me-chamo.webm"
   },
   "Mãe": {
     "mp4": "/signs/video/mae.mp4",
@@ -44,15 +114,40 @@
     "poster": "/signs/video/pai-poster.jpg",
     "webm": "/signs/video/pai.webm"
   },
+  "Prazer": {
+    "mp4": "/signs/video/prazer.mp4",
+    "poster": "/signs/video/prazer-poster.jpg",
+    "webm": "/signs/video/prazer.webm"
+  },
+  "Preto": {
+    "mp4": "/signs/video/preto.mp4",
+    "poster": "/signs/video/preto-poster.jpg",
+    "webm": "/signs/video/preto.webm"
+  },
   "Primo": {
     "mp4": "/signs/video/primo.mp4",
     "poster": "/signs/video/primo-poster.jpg",
     "webm": "/signs/video/primo.webm"
   },
+  "Rosa": {
+    "mp4": "/signs/video/rosa.mp4",
+    "poster": "/signs/video/rosa-poster.jpg",
+    "webm": "/signs/video/rosa.webm"
+  },
+  "Roxo": {
+    "mp4": "/signs/video/roxo.mp4",
+    "poster": "/signs/video/roxo-poster.jpg",
+    "webm": "/signs/video/roxo.webm"
+  },
+  "Tchau": {
+    "mp4": "/signs/video/tchau.mp4",
+    "poster": "/signs/video/tchau-poster.jpg",
+    "webm": "/signs/video/tchau.webm"
+  },
   "Tia": {
-    "mp4": "/signs/video/tio.mp4",
-    "poster": "/signs/video/tio-poster.jpg",
-    "webm": "/signs/video/tio.webm"
+    "mp4": "/signs/video/tia.mp4",
+    "poster": "/signs/video/tia-poster.jpg",
+    "webm": "/signs/video/tia.webm"
   },
   "Tio": {
     "mp4": "/signs/video/tio.mp4",
@@ -63,5 +158,20 @@
     "mp4": "/signs/video/tudo-bem.mp4",
     "poster": "/signs/video/tudo-bem-poster.jpg",
     "webm": "/signs/video/tudo-bem.webm"
+  },
+  "Verde": {
+    "mp4": "/signs/video/verde.mp4",
+    "poster": "/signs/video/verde-poster.jpg",
+    "webm": "/signs/video/verde.webm"
+  },
+  "Vermelho": {
+    "mp4": "/signs/video/vermelho.mp4",
+    "poster": "/signs/video/vermelho-poster.jpg",
+    "webm": "/signs/video/vermelho.webm"
+  },
+  "Você": {
+    "mp4": "/signs/video/voce.mp4",
+    "poster": "/signs/video/voce-poster.jpg",
+    "webm": "/signs/video/voce.webm"
   }
 }

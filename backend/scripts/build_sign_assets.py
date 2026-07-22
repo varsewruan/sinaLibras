@@ -2,7 +2,7 @@
 Build the asset bundle for the sign catalog.
 
 Pipeline (best-effort):
-  1. For each of the 36 catalog terms, query Wikimedia Commons API for a
+  1. For each of the 35 catalog terms, query Wikimedia Commons API for a
      potentially relevant Libras image. If a plausible match comes back,
      download it as <slug>.jpg.
   2. Always generate a themed SVG placeholder per term (gradient + emoji +
@@ -35,8 +35,8 @@ from pathlib import Path
 # ----------------------------- Catalog (mirrored from seed.py) --------------
 
 CATALOG_TERMS: list[str] = [
-    # Phase 1 — Cumprimentos
-    "Olá", "Tchau", "Tudo bem?", "Obrigado",
+    # Phase 1 — Cumprimentos (11 termos)
+    "Olá", "Tchau", "Tudo bem?",
     "Bom dia", "Boa tarde", "Boa noite", "Até logo",
     "Prazer", "Como vai?", "Me chamo", "Você",
     # Phase 2 — Família
@@ -45,7 +45,7 @@ CATALOG_TERMS: list[str] = [
     "Avô", "Avó", "Tio", "Tia", "Primo",
     # Phase 3 — Cores
     "Vermelho", "Azul", "Amarelo", "Verde",
-    "Branco", "Preto", "Cinza", "Marrom",
+    "Branco", "Preto", "Marrom",
     "Rosa", "Roxo", "Laranja", "Dourado",
 ]
 
@@ -53,7 +53,7 @@ CATALOG_TERMS: list[str] = [
 # even before Libras content lands.
 EMOJI_BY_TERM: dict[str, str] = {
     # Cumprimentos
-    "Olá": "👋", "Tchau": "👋", "Tudo bem?": "🤔", "Obrigado": "🙏",
+    "Olá": "👋", "Tchau": "👋", "Tudo bem?": "🤔",
     "Bom dia": "🌅", "Boa tarde": "☀️", "Boa noite": "🌙", "Até logo": "👋",
     "Prazer": "🤝", "Como vai?": "💬", "Me chamo": "💁", "Você": "👉",
     # Família
@@ -62,7 +62,7 @@ EMOJI_BY_TERM: dict[str, str] = {
     "Avô": "👴", "Avó": "👵", "Tio": "🧔", "Tia": "🧑", "Primo": "🧑‍🤝‍🧑",
     # Cores — emoji is literally the color
     "Vermelho": "🔴", "Azul": "🔵", "Amarelo": "🟡", "Verde": "🟢",
-    "Branco": "⚪", "Preto": "⚫", "Cinza": "🌫️", "Marrom": "🟤",
+    "Branco": "⚪", "Preto": "⚫", "Marrom": "🟤",
     "Rosa": "💗", "Roxo": "🟣", "Laranja": "🟠", "Dourado": "✨",
 }
 
@@ -70,8 +70,8 @@ EMOJI_BY_TERM: dict[str, str] = {
 # Pattern: (stop1, stop2, text_color, eyebrow).
 PALETTE_BY_TERM: dict[str, tuple[str, str, str, str]] = {}
 
-# Cumprimentos — navy → primary blue (white text)
-for term in CATALOG_TERMS[0:12]:
+# Cumprimentos — navy → primary blue (white text). Os 11 primeiros termos.
+for term in CATALOG_TERMS[0:11]:
     PALETTE_BY_TERM[term] = ("#031f55", "#0446b0", "#FFFFFF", "CUMPRIMENTO")
 
 # Cores — each term has its own bg
@@ -82,7 +82,6 @@ COLOR_PALETTE: dict[str, tuple[str, str, str]] = {
     "Verde":     ("#86EFAC", "#15803D", "#FFFFFF"),
     "Branco":    ("#FFFFFF", "#E5E7EB", "#1F1611"),
     "Preto":     ("#374151", "#0F172A", "#FFFFFF"),
-    "Cinza":     ("#D1D5DB", "#6B7280", "#FFFFFF"),
     "Marrom":    ("#D4A574", "#78350F", "#FFFFFF"),
     "Rosa":      ("#FBCFE8", "#DB2777", "#FFFFFF"),
     "Roxo":      ("#DDD6FE", "#7C3AED", "#FFFFFF"),
@@ -96,7 +95,7 @@ for term, (a, b, txt) in COLOR_PALETTE.items():
 # a colour) instead of a fixed CATALOG_TERMS slice: the family group grows as
 # real footage arrives, and a hardcoded slice would silently mis-tint the
 # terms that fall off the end.
-for term in CATALOG_TERMS[12:]:
+for term in CATALOG_TERMS[11:]:
     if term not in COLOR_PALETTE:
         PALETTE_BY_TERM[term] = ("#FED7AA", "#EA580C", "#1F1611", "FAMÍLIA")
 

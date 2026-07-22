@@ -132,6 +132,25 @@ async def client() -> AsyncClient:
         yield c
 
 
+@pytest.fixture
+def apertar_rate_limit(monkeypatch):
+    """
+    Baixa um RATE_LIMIT_* para o teste que precisa VER o 429.
+
+    Os limites deste arquivo são gigantes de propósito, senão a suíte inteira
+    esbarraria neles. O limiter lê o valor por request (`lambda:
+    get_settings()...`), então basta trocar a env var e limpar o cache —
+    inclusive na volta, ou o limite apertado vazaria para os outros testes.
+    """
+    def aplicar(nome: str, valor: str) -> None:
+        monkeypatch.setenv(nome, valor)
+        get_settings.cache_clear()
+
+    yield aplicar
+    monkeypatch.undo()
+    get_settings.cache_clear()
+
+
 @pytest_asyncio.fixture
 async def auth_client(client) -> AsyncClient:
     """Client logged in as a freshly-created user. Cookies are persisted on the client."""

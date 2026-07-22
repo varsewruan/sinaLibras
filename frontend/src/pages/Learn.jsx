@@ -27,8 +27,8 @@ const MODES = [
     title: "Quiz", description: "Aprenda respondendo perguntas.",
   },
   {
-    icon: Clapperboard, iconColor: "#F472B6", soon: true, testId: "mode-videoaulas",
-    title: "Vídeo-aulas", description: "Aprenda assistindo vídeo-aulas com professores reais.",
+    icon: Clapperboard, iconColor: "#F472B6", to: "/video-lessons", testId: "mode-videoaulas",
+    title: "Vídeo-aulas", description: "Assista aos sinais de cada tema quantas vezes quiser.",
   },
   {
     icon: Sparkles, iconColor: "#38BDF8", soon: true, testId: "mode-simulacao",

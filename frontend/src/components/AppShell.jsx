@@ -2,15 +2,19 @@
  * Layout wrapper for every authenticated page.
  *
  * Composition:
- *   <Sidebar />            – fixed left, lg+ only
  *   <BottomNav />          – fixed bottom, mobile only
  *   <main>
- *     <Header />           – sticky top (identity + XP/gems)
+ *     <Header />           – sticky top (identity + XP/gems/streak)
  *     {children}
  *   </main>
  *
- * The pl-64 on <main> matches the sidebar width; pb-20 on mobile leaves
- * room for the bottom nav so content isn't covered.
+ * There is no desktop sidebar (removed 2026-07-18): the Home hub is the one
+ * screen that carries every entry point, so a second permanent nav rail was
+ * saying the same thing twice. The brand in the Header is the way back to it
+ * at every breakpoint — with no sidebar, that link is the *only* route home
+ * on desktop, so it must not be hidden.
+ *
+ * pb-20 on mobile leaves room for the bottom nav so content isn't covered.
  *
  * `title` names the page in the browser tab — the Header shows the user's
  * identity instead of a page heading, matching the mockup.
@@ -18,7 +22,6 @@
 
 import { useEffect } from "react";
 
-import { Sidebar } from "@/components/Sidebar";
 import { BottomNav } from "@/components/BottomNav";
 import { Header } from "@/components/Header";
 
@@ -31,9 +34,8 @@ export const AppShell = ({ title, children }) => {
 
   return (
     <div className="min-h-screen text-foreground">
-      <Sidebar />
       <BottomNav />
-      <div className="lg:pl-64 min-h-screen flex flex-col">
+      <div className="min-h-screen flex flex-col">
         <Header />
         <main className="flex-1 pb-20 lg:pb-8">
           {/* Page-level enter/exit animation lives in App.js (AnimatePresence
