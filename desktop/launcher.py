@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import os
 import secrets
+import shutil
 import socket
 import subprocess
 import sys
@@ -388,6 +389,12 @@ def main() -> int:
             pass
 
 
+# Abaixo disso, uma janela que "fechou" quase certamente não foi fechada pelo
+# usuário — o Chromium entregou a URL a outro processo e saiu (ver
+# open_app_window). Nesse caso NÃO derrubamos o backend.
+MIN_WINDOW_SECONDS = 5.0
+
+
 # Navegadores baseados em Chromium, em ordem de preferência. Edge vem primeiro
 # por estar sempre presente no Windows 10/11.
 _BROWSERS = [
@@ -407,23 +414,51 @@ def _find_chromium() -> Optional[Path]:
     return None
 
 
+def _cleanup_old_profiles(keep: Path) -> None:
+    """Apaga os perfis de janela de execuções anteriores.
+
+    Como usamos um `--user-data-dir` novo a cada abertura (ver
+    open_app_window), os antigos só ocupam espaço. Best-effort: um perfil ainda
+    travado por um Chromium vivo não deleta, e tudo bem — cai fora no próximo
+    boot. O glob `janela*` também limpa o `janela` único das versões antigas.
+    """
+    try:
+        entries = list(keep.parent.glob("janela*"))
+    except OSError:
+        return
+    for entry in entries:
+        if entry == keep or not entry.is_dir():
+            continue
+        shutil.rmtree(entry, ignore_errors=True)
+
+
 def open_app_window(url: str) -> None:
     """Abre o app numa janela própria e espera ela fechar.
 
-    ## Por que assim
+    ## Por que um perfil NOVO a cada abertura
 
-    O modo `--app` do Chromium abre uma janela SEM barra de endereço, sem
-    abas, com entrada própria na barra de tarefas e ícone do site. Visualmente
-    é um aplicativo — é o mesmo truque que os "apps instalados" do Chrome/Edge
-    usam. E não custa nada em tamanho: o motor já está na máquina.
+    O modo `--app` do Chromium abre uma janela SEM barra de endereço, sem abas,
+    com entrada própria na barra de tarefas e ícone do site. Visualmente é um
+    aplicativo, e não custa nada em tamanho: o motor já está na máquina. O
+    truque só se sustenta se ESTE processo do navegador ficar vivo enquanto a
+    janela existe — é o `window.wait()` lá embaixo que segura o launcher no ar;
+    quando ele volta, o `main()` cai no `finally` e derruba o mongod.
 
-    O `--user-data-dir` dedicado é o que faz isso funcionar de verdade:
+    O perigo é o Chromium ENTREGAR a URL a um processo já existente e sair na
+    hora. Ele faz isso quando acha outro processo usando o mesmo
+    `--user-data-dir` (o "singleton" do perfil). O Edge agrava: com o startup
+    boost ligado ele mantém um processo em segundo plano mesmo sem janelas. Aí
+    o `msedge.exe` que abrimos entrega a URL e encerra em <1s, o `wait()` volta
+    na hora e o launcher mata o backend com a janela ainda na tela — o usuário
+    digita o login e cai num backend morto ("falha ao entrar" depois de ~1min
+    de retry). Aconteceu de verdade (ver sinalibras.log: janela "fechada" no
+    mesmo segundo em que abriu).
 
-      1. força um processo NOVO do navegador em vez de reaproveitar uma janela
-         já aberta — sem isso o `wait()` voltaria na hora e o app se
-         encerraria com a janela ainda na tela;
-      2. isola a sessão: o cookie de login do app não se mistura com a
-         navegação pessoal de quem usa.
+    A defesa é um `--user-data-dir` ÚNICO por abertura: sem processo pré-
+    existente para aquele perfil, o Chromium é obrigado a criar um processo
+    novo, que vive enquanto a janela viver. Não se perde nada: a porta muda a
+    cada boot, então o cookie de login (preso à origem 127.0.0.1:porta) já não
+    sobrevivia entre sessões — o perfil sempre foi descartável.
 
     Tentei antes uma janela nativa com pywebview/WebView2. Ela **crasha duro**
     (0xC0000409 dentro de `webview.start()`, no 3.13 e no 3.14), e crash
@@ -431,8 +466,10 @@ def open_app_window(url: str) -> None:
     mongod órfão. Como não consigo verificar que funciona, não vai junto.
     """
     exe = _find_chromium()
-    profile = data_dir() / "janela"
+    # Perfil único por PID: garante um processo novo (sem entrega ao velho).
+    profile = data_dir() / f"janela-{os.getpid()}"
     profile.mkdir(parents=True, exist_ok=True)
+    _cleanup_old_profiles(keep=profile)
 
     if exe is None:
         # Nenhum Chromium: cai pro navegador padrão. Vira uma aba comum, mas
@@ -446,6 +483,7 @@ def open_app_window(url: str) -> None:
             time.sleep(3600)
 
     log(f"abrindo janela do app com {exe.name}")
+    started = time.monotonic()
     window = subprocess.Popen(
         [
             str(exe),
@@ -462,6 +500,21 @@ def open_app_window(url: str) -> None:
     # Bloqueia até a pessoa fechar a janela; aí o main() cai no `finally` e
     # derruba o mongod junto.
     window.wait()
+
+    # Rede de segurança: se o navegador saiu cedo demais, ele quase certamente
+    # ENTREGOU a janela a outro processo (ver docstring) em vez de ter sido
+    # fechado pelo usuário. Derrubar o backend agora mataria uma janela viva —
+    # e não dá pra reatar naquele processo alheio. Então seguramos o app no ar
+    # em vez de matá-lo. O perfil único torna isso raríssimo, mas o estrago de
+    # errar é justamente o bug que estamos consertando.
+    if time.monotonic() - started < MIN_WINDOW_SECONDS:
+        log(
+            "janela encerrou em <5s (provável entrega a outro Chromium); "
+            "mantendo o app no ar para não matar uma janela viva"
+        )
+        while True:
+            time.sleep(3600)
+
     log("janela fechada")
 
 
